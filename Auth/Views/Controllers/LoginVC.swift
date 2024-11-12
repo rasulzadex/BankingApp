@@ -221,24 +221,33 @@ class LoginVC: UIViewController {
     
     @objc
     func loginButtonClick() {
-        guard let customers = viewModel.fetchCustomers() else { 
-             showAlert(on: self, message: "Failed to fetch customers.")
-             return
-         }
-         
-         for customer in customers {
-             if phoneNumberTextF.text == customer.phoneNumber,
-                passwordTextF.text == customer.customerPassword {
-                 let navController = TestVC()
-                 navigationController?.pushViewController(navController, animated: true)
-                 navigationController?.navigationBar.tintColor = .appGreen
-                 return
-             }
-         }
-         
-         showAlert(on: self, message: "Please check your inputs and try again.")
-     }
-     
+        guard let phoneNumber = phoneNumberTextF.text, !phoneNumber.isEmpty,
+              let password = passwordTextF.text, !password.isEmpty else {
+            showAlert(on: self, message: "Please fill inputs correctly")
+            return
+        }
+        
+        guard let customers = viewModel.fetchCustomers() else {
+            showAlert(on: self, message: "Failed to fetch customers.")
+            return
+        }
+        
+        for customer in customers {
+            if phoneNumber == customer.phoneNumber {
+                if password == customer.customerPassword {
+                    let navController = TestVC()
+                    navigationController?.pushViewController(navController, animated: true)
+                    return
+                } else {
+                    showAlert(on: self, message: "Password is incorrect")
+                    return
+                }
+            }
+        }
+        
+        showAlert(on: self, message: "This phone number is not registered")
+    }
+
      func showAlert(on viewController: UIViewController, message: String) {
          let alert = UIAlertController(title: "ERROR", message: message, preferredStyle: .alert)
          let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
