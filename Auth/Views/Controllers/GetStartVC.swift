@@ -110,16 +110,14 @@ class GetStartVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-//        view.backgroundColor = .darkGreen.withAlphaComponent()
         addAllSubviews()
         configureConstraints()
 
-        // Do any additional setup after loading the view.
     }
     
     @objc
         func getStarted() {
-           let navController = LoginVC()
+            let navController = LoginVC(viewModel: LoginViewModel())
             navigationController?.pushViewController(navController, animated: true)
 //            navigationController?.navigationBar.isHidden = true
         }

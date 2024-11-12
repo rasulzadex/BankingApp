@@ -33,6 +33,9 @@ final class RegisterViewModel {
        }
     
     
+    
+    
+    
     func saveCustomer(name: String, lastName: String, customerID: String, email: String, phoneNumber: String, password: String) {
             let customer = Customer()
             customer.name = name

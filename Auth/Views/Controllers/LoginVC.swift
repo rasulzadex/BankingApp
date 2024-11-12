@@ -10,9 +10,9 @@ import RealmSwift
 
 
 class LoginVC: UIViewController {
-    private var customerList: Results<Customer>?
-    private let realm = try? Realm()
-    
+//    private var customerList: Results<Customer>?
+//    private let realm = try? Realm()
+//    
     
     
     private lazy var scrollView: UIScrollView = {
@@ -195,6 +195,22 @@ class LoginVC: UIViewController {
     }()
 
     
+    private let viewModel: LoginViewModel
+    
+    init(viewModel: LoginViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        self.viewModel = LoginViewModel()
+        super.init(coder: coder)
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -205,7 +221,7 @@ class LoginVC: UIViewController {
     
     @objc
     func loginButtonClick() {
-         guard let customers = fetchCustomers() else { 
+        guard let customers = viewModel.fetchCustomers() else { 
              showAlert(on: self, message: "Failed to fetch customers.")
              return
          }
@@ -354,15 +370,15 @@ class LoginVC: UIViewController {
     
     }
     
-    func fetchCustomers() -> [Customer]? {
-        guard let realm = realm else { // Check if Realm initialization was successful
-            print("Error initializing Realm.")
-            return nil
-        }
-        
-        let customers = realm.objects(Customer.self)
-        return Array(customers)
-    }
+//    func fetchCustomers() -> [Customer]? {
+//        guard let realm = realm else { // Check if Realm initialization was successful
+//            print("Error initializing Realm.")
+//            return nil
+//        }
+//        
+//        let customers = realm.objects(Customer.self)
+//        return Array(customers)
+//    }
 }
 
 extension LoginVC: UITextFieldDelegate {

@@ -53,9 +53,8 @@ extension String {
         }
     
     func isValidPass() -> Bool {
-        let passwordRegex = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$"
-        let passwordPredicate = NSPredicate(format: "SELF MATCHES %@", passwordRegex)
-                return passwordPredicate.evaluate(with: self) && self.count >= 8
+
+                return self.count >= 8
     }
 }
 
