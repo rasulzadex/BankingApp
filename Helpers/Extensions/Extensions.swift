@@ -8,6 +8,41 @@
 import Foundation
 import UIKit
 
+extension UITextField {
+    
+    func setCardNumberFormatting() {
+        self.keyboardType = .numberPad
+        self.addTarget(self, action: #selector(formatCardNumber), for: .editingChanged)
+    }
+    
+    @objc private func formatCardNumber() {
+        guard var text = self.text?.replacingOccurrences(of: " ", with: "") else { return }
+        
+        if text.count > 16 {
+            text = String(text.prefix(16))
+        }
+        
+        let formattedText = text.enumerated().map { index, character in
+            return index % 4 == 0 && index > 0 ? " \(character)" : "\(character)"
+        }.joined()
+        
+        self.text = formattedText
+    }
+}
+
+
+
+
+extension UIImage {
+    func resize(to size: CGSize) -> UIImage? {
+        UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+        draw(in: CGRect(origin: .zero, size: size))
+        let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return resizedImage
+    }
+}
+
 
 
 extension UITextField {

@@ -2,7 +2,7 @@
 //  AppDelegate.swift
 //  BankAPP
 //
-//  Created by Javidan on 02.11.24.
+//  Created by Javidan on 02.11.24. 
 //
 
 import UIKit

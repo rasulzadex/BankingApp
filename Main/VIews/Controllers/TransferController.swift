@@ -1,18 +1,17 @@
 //
-//  TestVC.swift
+//  TransferController.swift
 //  BankAPP
 //
-//  Created by Javidan on 05.11.24.
+//  Created by Javidan on 15.11.24.
 //
 
 import UIKit
 
-class TestVC: UIViewController {
+class TransferController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = .white
         // Do any additional setup after loading the view.
     }
     

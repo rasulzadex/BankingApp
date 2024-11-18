@@ -5,6 +5,8 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>Revue.ttf</string>
+		<string>Card.ttf</string>
+		<string>Downtown.otf</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

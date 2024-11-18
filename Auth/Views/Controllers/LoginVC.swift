@@ -10,10 +10,7 @@ import RealmSwift
 
 
 class LoginVC: UIViewController {
-//    private var customerList: Results<Customer>?
-//    private let realm = try? Realm()
-//    
-    
+
     
     private lazy var scrollView: UIScrollView = {
            let sv = UIScrollView()
@@ -141,22 +138,9 @@ class LoginVC: UIViewController {
         return tf
     }()
     
-    private lazy var loginButton: UIButton = {
-        let b = UIButton()
-        b.translatesAutoresizingMaskIntoConstraints = false
-        b.setTitle("Login", for: .normal)
-        b.setTitleColor(.white, for: .normal)
-        b.backgroundColor = .appGreen
-        b.layer.cornerRadius = 10
-        b.layer.borderWidth = 1
-        b.layer.borderColor = UIColor.black.cgColor
-        b.translatesAutoresizingMaskIntoConstraints = false
-        
-        b.addTarget(self, action: #selector(loginButtonClick), for: .touchUpInside)
-
+    private lazy var loginButton: ReusableButton = {
+        let b = ReusableButton(title: "Login", buttonColor: .appGreen, onAction: {[weak self] in self?.loginButtonClick()})
         return b
-        
-        
     }()
     
     
@@ -217,6 +201,8 @@ class LoginVC: UIViewController {
         
         addSubviews()
         confConstraints()
+        UserDefaultsHelper.setInteger(key: UserDefaultsKey.loginType.rawValue, value: 1)
+
     }
     
     @objc
@@ -227,27 +213,29 @@ class LoginVC: UIViewController {
             return
         }
         
-        guard let customers = viewModel.fetchCustomers() else {
-            showAlert(on: self, message: "Failed to fetch customers.")
-            return
+        viewModel.performLogin(phoneNumber: phoneNumber, password: password)
+        
+        if viewModel.numberCheck == "Failed to fetch customers." {
+            showAlert(on: self, message: viewModel.numberCheck)
+        } else if viewModel.numberCheck == "This phone number is not registered" {
+            showAlert(on: self, message: viewModel.numberCheck)
+        } else if viewModel.passCheck == "Password is incorrect" {
+            showAlert(on: self, message: viewModel.passCheck)
+        } else if viewModel.passCheck == "Password is correct" {
+                showCard()
+
         }
         
-        for customer in customers {
-            if phoneNumber == customer.phoneNumber {
-                if password == customer.customerPassword {
-                    let navController = TestVC()
-                    navigationController?.pushViewController(navController, animated: true)
-                    return
-                } else {
-                    showAlert(on: self, message: "Password is incorrect")
-                    return
-                }
-            }
-        }
-        
-        showAlert(on: self, message: "This phone number is not registered")
     }
 
+
+    fileprivate func showCard() {
+        if let scene = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
+            scene.switchToCard()
+        }
+    }
+    
+    
      func showAlert(on viewController: UIViewController, message: String) {
          let alert = UIAlertController(title: "ERROR", message: message, preferredStyle: .alert)
          let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
@@ -281,6 +269,7 @@ class LoginVC: UIViewController {
 
 
     }
+    
 
     fileprivate func confConstraints(){
         

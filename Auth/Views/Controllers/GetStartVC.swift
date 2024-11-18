@@ -111,7 +111,10 @@ class GetStartVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         addAllSubviews()
+        
         configureConstraints()
+
+        UserDefaultsHelper.setInteger(key: UserDefaultsKey.loginType.rawValue, value: 0)
 
     }
     

@@ -10,25 +10,69 @@ import UIKit
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
-
-
+    //    private var loginType = UserDefaultsHelper.getInteger(key: "LoginType")
+    private var loginType = UserDefaultsHelper.getInteger(key: UserDefaultsKey.loginType.rawValue)
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-        // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-        // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let windowScene = (scene as? UIWindowScene) else { return }
-        
-        let newWindow = UIWindow(windowScene: windowScene)
-        let controller = GetStartVC()
-        let navCOntroller = UINavigationController(rootViewController: controller)
-//        navCOntroller.navigationBar.tintColor = .appGreen
-        navCOntroller.navigationBar.isHidden = true
-        newWindow.rootViewController = navCOntroller
+        start(scene: windowScene)
+        guard let _ = (scene as? UIWindowScene) else { return }
+    }
+    fileprivate func start(scene: UIWindowScene) {
+        var newWindow: UIWindow?
+        switch loginType {
+        case 0:
+            newWindow = showGetStartedVC(scene: scene)
+        case 1:
+            newWindow = showLoginVC(scene: scene)
+        default:
+            newWindow = showCard(scene: scene)
+        }
         window = newWindow
-        
         window?.makeKeyAndVisible()
+        
+    }
+    
+    private func showLoginVC(scene: UIWindowScene) -> UIWindow {
+        let controller = LoginVC(viewModel: LoginViewModel())
+        let navigationController = UINavigationController(rootViewController: controller)
+        let newWindow = UIWindow(windowScene: scene)
+        navigationController.navigationBar.isHidden = true
+
+        newWindow.rootViewController = navigationController
+        return newWindow
+    }
+    
+    private func showGetStartedVC(scene: UIWindowScene) -> UIWindow {
+        let controller = GetStartVC()
+        let navigationController = UINavigationController(rootViewController: controller)
+        navigationController.navigationBar.isHidden = true
+        let newWindow = UIWindow(windowScene: scene)
+        newWindow.rootViewController = navigationController
+        return newWindow
+    }
+ 
+    private func showCard(scene: UIWindowScene) -> UIWindow {
+        let controller = TabBarController()
+        let navigationController = UINavigationController(rootViewController: controller)
+        navigationController.navigationBar.isHidden = false
+        navigationController.navigationBar.tintColor = .appGreen
+        let newWindow = UIWindow(windowScene: scene)
+        newWindow.rootViewController = navigationController
+        return newWindow
     }
 
+    func switchToLogin() {
+        guard let windowScene = window?.windowScene else { return }
+        window = showLoginVC(scene: windowScene)
+        window?.makeKeyAndVisible()
+    }
+    
+    func switchToCard() {
+        guard let windowScene = window?.windowScene else { return }
+        window = showCard(scene: windowScene)
+        window?.makeKeyAndVisible()
+    }
+    
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.
         // This occurs shortly after the scene enters the background, or when its session is discarded.
