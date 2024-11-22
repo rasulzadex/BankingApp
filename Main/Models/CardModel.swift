@@ -9,10 +9,13 @@ import Foundation
 import RealmSwift
 
 class CardModel: Object {
-    
+   
+    @Persisted var cardName: String
     @Persisted var cardNumber: String
     @Persisted var cardExpiration: String
     @Persisted var cardCVV: String
     @Persisted var cardBalance: String
+
+    
     
 }

@@ -34,18 +34,18 @@ class TabBarController: UITabBarController {
         firstTab.view.backgroundColor = .clear
         firstTab.tabBarItem = UITabBarItem(title: "Home", image: UIImage(named: "homeTab")?.resize(to: CGSize(width: 25, height: 25)), tag: 0)
        
-
-        let secondTab = TransferController()
-        secondTab.view.backgroundColor = .red
-        secondTab.tabBarItem = UITabBarItem(title: "Transfer", image: UIImage(named: "transferTab")?.resize(to: CGSize(width: 25, height: 25)), tag: 1)
+//
+//        let secondTab = TransferController()
+//        secondTab.view.backgroundColor = .red
+//        secondTab.tabBarItem = UITabBarItem(title: "Transfer", image: UIImage(named: "transferTab")?.resize(to: CGSize(width: 25, height: 25)), tag: 1)
         
         
         let thirdTab = ProfileController()
         thirdTab.view.backgroundColor = .red
-        thirdTab.tabBarItem = UITabBarItem(title: "Profile", image: UIImage(systemName: "person.crop.circle.fill"), tag: 2)
+        thirdTab.tabBarItem = UITabBarItem(title: "Profile", image: UIImage(systemName: "person.crop.circle.fill"), tag: 1)
         
         
-        viewControllers = [firstTab, secondTab, thirdTab]
+        viewControllers = [firstTab, thirdTab]
     }
 }
 

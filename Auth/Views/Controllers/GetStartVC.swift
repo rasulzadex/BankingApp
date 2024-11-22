@@ -95,7 +95,7 @@ class GetStartVC: UIViewController {
     
     
     
-    private lazy var addView: UIView = {
+    private lazy var adddView: UIView = {
        let v = UIView()
         
         v.backgroundColor = .appGreen.withAlphaComponent(0.7)
@@ -122,12 +122,11 @@ class GetStartVC: UIViewController {
         func getStarted() {
             let navController = LoginVC(viewModel: LoginViewModel())
             navigationController?.pushViewController(navController, animated: true)
-//            navigationController?.navigationBar.isHidden = true
         }
     
     fileprivate func addAllSubviews(){
             view.addSubview(imageView)
-            view.addSubview(addView)
+            view.addSubview(adddView)
             view.addSubview(scrollView)
             scrollView.addSubview(containerView)
 
@@ -201,10 +200,10 @@ class GetStartVC: UIViewController {
 
         // AddView Overlay Constraints
         NSLayoutConstraint.activate([
-            addView.widthAnchor.constraint(equalTo: view.widthAnchor),
-            addView.heightAnchor.constraint(equalTo: view.heightAnchor),
-            addView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            addView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            adddView.widthAnchor.constraint(equalTo: view.widthAnchor),
+            adddView.heightAnchor.constraint(equalTo: view.heightAnchor),
+            adddView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            adddView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
 

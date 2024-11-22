@@ -28,6 +28,42 @@ extension UITextField {
         
         self.text = formattedText
     }
+
+    
+    func setCardExpirationDateFormatting() {
+        self.keyboardType = .numberPad
+        self.addTarget(self, action: #selector(formatExpirationDate), for: .editingChanged)
+    }
+    
+    @objc private func formatExpirationDate() {
+        guard var text = self.text?.replacingOccurrences(of: "/", with: "") else { return }
+        
+        if text.count > 6 {
+            text = String(text.prefix(6))
+        }
+        
+        if text.count > 2 {
+            text.insert("/", at: text.index(text.startIndex, offsetBy: 2))
+        }
+        
+        self.text = text
+    }
+    
+    func setCVVFormat() {
+        self.keyboardType = .numberPad
+        self.addTarget(self, action: #selector(formatCVV), for: .editingChanged)
+    }
+    
+    @objc private func formatCVV() {
+        guard var text = self.text else { return }
+        
+        if text.count > 3 {
+            text = String(text.prefix(3))
+        }
+        self.text = text
+    }
+    
+    
 }
 
 
@@ -91,6 +127,60 @@ extension String {
 
                 return self.count >= 8
     }
+    
+    func isValidCVV() -> Bool {
+
+                return self.count == 3
+    }
+    
+    
+    func isVisaCard() -> Bool {
+        let visaRegex = "^4[0-9]{12,15}$"
+        let visaPredicate = NSPredicate(format: "SELF MATCHES %@", visaRegex)
+        return visaPredicate.evaluate(with: self.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+        
+        func isMasterCard() -> Bool {
+            let masterCardRegex = "^5[1-5][0-9]{14}$"
+            let masterCardPredicate = NSPredicate(format: "SELF MATCHES %@", masterCardRegex)
+            return masterCardPredicate.evaluate(with: self)
+        }
+        
+        func isValidPAN() -> Bool {
+            let panRegex = "^[0-9]{16}$" // PANs are typically 16 digits long
+            let panPredicate = NSPredicate(format: "SELF MATCHES %@", panRegex)
+            return panPredicate.evaluate(with: self)
+        }
+    
+    func isValidExpirationDate() -> Bool {
+        let dateRegex = "^(0[1-9]|1[0-2])/\\d{4}$" // Format MM/YYYY
+        let datePredicate = NSPredicate(format: "SELF MATCHES %@", dateRegex)
+        
+        guard datePredicate.evaluate(with: self) else {
+            return false // Does not match MM/YYYY format
+        }
+        
+        let components = self.split(separator: "/")
+        guard components.count == 2,
+              let month = Int(components[0]),
+              let year = Int(components[1]) else {
+            return false
+        }
+        
+        let currentDate = Date()
+        let calendar = Calendar.current
+        
+        let currentYear = calendar.component(.year, from: currentDate)
+        let currentMonth = calendar.component(.month, from: currentDate)
+        
+        if year > currentYear || (year == currentYear && month >= currentMonth) {
+            return true
+        } else {
+            return false
+        }
+    }
+    
 }
 
 
@@ -125,5 +215,12 @@ extension UITextField {
             .foregroundColor: color.withAlphaComponent(alpha)
         ]
         self.attributedPlaceholder = NSAttributedString(string: text, attributes: attributes)
+    }
+}
+
+
+extension UIView {
+    func addViews(view:[UIView]){
+        view.forEach {self.addSubview($0)}
     }
 }

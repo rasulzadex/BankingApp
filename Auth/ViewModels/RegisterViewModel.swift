@@ -11,6 +11,8 @@ final class RegisterViewModel {
     
     private var customerList: Results<Customer>?
     private let realm = try? Realm()
+    
+    
     private var checker: [ValidationType: Bool] = [
             .email: false,
             .fin: false,

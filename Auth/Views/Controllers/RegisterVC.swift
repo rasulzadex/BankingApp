@@ -69,7 +69,6 @@ class RegisterVC: UIViewController {
     private lazy var welcomeLabel: UILabel = {
         let l = UILabel()
         l.text = "Enter details to create manat bank account"
-        //        l.setLeftPaddingForLabel(5)
         l.textAlignment = .center
         l.numberOfLines = 0
         l.font = UIFont.systemFont(ofSize: 14, weight: .regular)
@@ -523,7 +522,6 @@ class RegisterVC: UIViewController {
         navigationController?.popViewController(animated: true)
         
     }
-    
     
 }
 
