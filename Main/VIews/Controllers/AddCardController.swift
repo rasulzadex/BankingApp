@@ -26,13 +26,13 @@ class AddCardController: BaseViewController {
            self.cardList = realm?.objects(CardModel.self)
        }
     
-    func saveCard(cardName: String, cardPan: String, cardExp: String, cardCVV: String) {
+    func saveCard(cardName: String, cardPan: String, cardExp: String, cardCVV: String, cardBalance:String) {
         let card = CardModel()
         card.cardCVV = cardCVV
-        card.cardBalance = "10"
         card.cardNumber = cardPan
         card.cardExpiration = cardExp
         card.cardName = cardName
+        card.cardBalance = cardBalance
             do {
                 try realm?.write {
                     realm?.add(card)
@@ -87,7 +87,7 @@ class AddCardController: BaseViewController {
     
     private lazy var cardName: ReusableTextField = {
         let t = ReusableTextField(placeholder: "CARDNAME", placeholderColor: .white, borderColor: .white, texttColor: .white, bgColor: .clear)
-        t.setCVVFormat()
+    
         t.font = UIFont(name: "Downtown", size: 14)
         t.delegate = self
         t.textAlignment = .center
@@ -120,10 +120,11 @@ class AddCardController: BaseViewController {
             guard let name = cardName.text,
                   let number = cardNumberTF.text,
                   let exp = cardExpiry.text,
-                  let cvv = cardCVV.text
+                  let cvv = cardCVV.text,
+                  let balance = balanceTF.text
                    else {return}
         
-         saveCard(cardName: name, cardPan: number, cardExp: exp, cardCVV: cvv)
+        saveCard(cardName: name, cardPan: number, cardExp: exp, cardCVV: cvv, cardBalance: balance)
 
             navigationController?.popViewController(animated: true)
 //        } else {

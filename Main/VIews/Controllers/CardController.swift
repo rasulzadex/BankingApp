@@ -115,10 +115,13 @@ class CardController: BaseViewController {
     
     @objc func addCardFunction(){
         navigationController?.pushViewController(AddCardController(), animated: true)
+        navigationController?.navigationBar.tintColor = .appGreen
+
     }
     
     @objc func tranferFunction(){
         navigationController?.pushViewController(TransferController(), animated: true)
+        navigationController?.navigationBar.tintColor = .white
     }
 
     @objc func deleteCardFunction() {

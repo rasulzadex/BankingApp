@@ -89,7 +89,7 @@ class ReusableLabel: UILabel {
         
         if let radius = cornerRadiusValue {
             layer.cornerRadius = radius
-            clipsToBounds = true // Ensures the corners are clipped
+            clipsToBounds = true 
         }
     }
 }
