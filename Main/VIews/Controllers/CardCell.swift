@@ -35,6 +35,11 @@ class CardCell: UICollectionViewCell {
         return i
     }()
     
+     lazy var balanceLabel: ReusableLabel = {
+        let l = ReusableLabel(text: "124 AZN", textAlignment: .center, fontName: "Revue", fontSize: 20, textColor: .white, numberOfLines: 0, cornerRadius: 10)
+        return l
+    }()
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         configureView()
@@ -47,11 +52,7 @@ class CardCell: UICollectionViewCell {
     }
     
     private func configureView() {
-        addSubview(cardImage)
-        addSubview(cardNumber)
-        addSubview(cardExp)
-        addSubview(cardName)
-        addSubview(cardType)
+        addViews(view: [cardImage, cardNumber, cardExp, cardName,cardType, balanceLabel])
     }
     
     private func configureConstraints() {
@@ -88,9 +89,16 @@ class CardCell: UICollectionViewCell {
         
         NSLayoutConstraint.activate([
             cardExp.trailingAnchor.constraint(equalTo: cardImage.trailingAnchor, constant: -24),
-            cardExp.centerYAnchor.constraint(equalTo: cardImage.centerYAnchor, constant: -80),
+            cardExp.centerYAnchor.constraint(equalTo: cardImage.centerYAnchor, constant: 40),
             cardExp.heightAnchor.constraint(equalToConstant: 24),
             cardExp.widthAnchor.constraint(equalToConstant: 64)
+        ])
+        
+        NSLayoutConstraint.activate([
+            balanceLabel.trailingAnchor.constraint(equalTo: cardImage.trailingAnchor, constant: -24),
+            balanceLabel.centerYAnchor.constraint(equalTo: cardImage.centerYAnchor, constant: -80),
+            balanceLabel.heightAnchor.constraint(equalToConstant: 64),
+            balanceLabel.widthAnchor.constraint(equalToConstant: 100)
         ])
         
     }

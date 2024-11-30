@@ -16,6 +16,10 @@ class TransferController: BaseViewController {
     var selectedFromCardRow: Int?
     var selectedToCardRow: Int?
     
+    
+    var selectedFromCard: CardModel?
+        var selectedToCard: CardModel?
+    
     init() {
         super.init(nibName: nil, bundle: nil)
         fetchCustomerList()
@@ -59,6 +63,26 @@ class TransferController: BaseViewController {
         return t
     }()
     
+    private lazy var fromLabel: ReusableLabel = {
+        let l = ReusableLabel(text: "Click to select", textAlignment: .center, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 0, cornerRadius: 10)
+        l.backgroundColor = .white.withAlphaComponent(0.7)
+        l.isUserInteractionEnabled = true
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(fromCardAction))
+        l.addGestureRecognizer(tapGesture)
+        return l
+    }()
+    
+    private lazy var toLabel: ReusableLabel = {
+        let l = ReusableLabel(text: "Click to select", textAlignment: .center, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 0, cornerRadius:  10)
+        l.backgroundColor = .white.withAlphaComponent(0.7)
+        l.isUserInteractionEnabled = true
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(toCardAction))
+        l.addGestureRecognizer(tapGesture)
+        return l
+    }()
+    
     private lazy var currencyLabel: ReusableLabel = {
         let l = ReusableLabel(text: "AZN", textAlignment: .center, fontName: "", fontSize: 14, textColor: .appGreen, numberOfLines: 0, cornerRadius: 10)
         l.backgroundColor  = .white.withAlphaComponent(0.7)
@@ -67,6 +91,7 @@ class TransferController: BaseViewController {
         return l
     }()
     
+    
     private lazy var transferButton: ReusableButton = {
         let b = ReusableButton(title: "Transfer", buttonColor: .appYellow) {
             [weak self] in self?.transferAction()
@@ -74,29 +99,6 @@ class TransferController: BaseViewController {
         return b
     }()
     
-    private lazy var toPicker: UIPickerView = {
-        let picker = UIPickerView()
-        picker.translatesAutoresizingMaskIntoConstraints = false
-        picker.backgroundColor = .white.withAlphaComponent(0.7)
-        picker.layer.borderColor = UIColor.white.cgColor
-        picker.layer.borderWidth = 1
-        picker.delegate = self
-        picker.dataSource = self
-        picker.layer.cornerRadius = 10
-        return picker
-    }()
-    
-    private lazy var fromPicker: UIPickerView = {
-        let picker = UIPickerView()
-        picker.translatesAutoresizingMaskIntoConstraints = false
-        picker.backgroundColor = .white.withAlphaComponent(0.7)
-        picker.layer.borderColor = UIColor.white.cgColor
-        picker.layer.borderWidth = 1
-        picker.delegate = self
-        picker.dataSource = self
-        picker.layer.cornerRadius = 10
-        return picker
-    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -104,58 +106,126 @@ class TransferController: BaseViewController {
     }
     override func configureView() {
         super.configureView()
-        view.addViews(view: [greenView, fromCard, toCard, toPicker, fromPicker, transferAmount, currencyLabel, transferButton])
+        view.addViews(view: [greenView, fromCard, toCard, fromLabel, toLabel, transferAmount, currencyLabel, transferButton])
     }
     
     @objc func transferAction() {
-        guard let transferAmountValue = Double(transferAmount.text ?? "") else {
-               print("Yanlış məbləğ daxil edildi.")
-               return
-           } 
+        executeTransfer()
+//        navigationController?.popViewController(animated: true)
         
-        let fromRow = fromPicker.selectedRow(inComponent: 0)
-        let toRow = toPicker.selectedRow(inComponent: 0)
+    }
+
+    @objc func fromCardAction() {
+        let vc = CardSelectionController()
         
-       
+        vc.sendCardinfo = { [weak self] card in
+                 self?.selectedFromCard = card
+                 self?.fromLabel.text = card.cardNumber
+             }
         
-        guard let fromCard = cardList?[fromRow], let toCard = cardList?[toRow] else {
-            print("Kart tapılmadı.")
+        if let sheet = vc.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.largestUndimmedDetentIdentifier = .medium
+            sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+            sheet.prefersEdgeAttachedInCompactHeight = true
+            sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = true
+        }
+        present(vc, animated: true)
+    }
+
+    @objc func toCardAction() {
+        let vc = CardSelectionController()
+        
+        vc.sendCardinfo = { [weak self] card in
+                 self?.selectedToCard = card
+                 self?.toLabel.text = card.cardNumber
+             }
+        
+        if let sheet = vc.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.largestUndimmedDetentIdentifier = .medium
+            sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+            sheet.prefersEdgeAttachedInCompactHeight = true
+            sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = true
+        }
+        present(vc, animated: true)
+    }
+    
+    func validateTransferAmount() -> Bool {
+        guard let amountText = transferAmount.text, let amount = Double(amountText), amount > 0 else {
+            showAlert(message: "Please enter a valid transfer amount.")
+            return false
+        }
+
+        guard let fromCard = selectedFromCard else {
+            showAlert(message: "Please select the 'from' card.")
+            return false
+        }
+
+        guard let fromCardBalance = Double(fromCard.cardBalance) else {
+            showAlert(message: "Invalid card balance.")
+            return false
+        }
+
+        if fromCardBalance < amount {
+            showAlert(message: "Insufficient balance on the selected card.")
+            return false
+        }
+
+        return true
+    }
+
+    
+    func executeTransfer() {
+        guard validateTransferAmount() else { return }
+        guard let fromCard = selectedFromCard, let toCard = selectedToCard else {
+            showAlert(message: "Please select both source and destination cards.")
             return
         }
-        
-        guard let balance = Double(fromCard.cardBalance), balance >= transferAmountValue else  {
-                print("Yetərli balans yoxdur.")
+        if fromCard == toCard {
+            showAlert(message: "You cannot transfer between same card")
+        }else{
+            
+            guard let amountText = transferAmount.text, let amount = Double(amountText) else {
+                showAlert(message: "Please enter a valid transfer amount.")
                 return
             }
             
-        
-        
-        
-        do {
-            try realm?.write {
-                guard var fromBalance = Double(fromCard.cardBalance), var toBalance = Double(toCard.cardBalance) else {return}
-                if fromRow == toRow {
-                    print ("Eyni kartlardan transfer mumkun deyil")
-                } else {
-                    fromBalance -= transferAmountValue
-                    toBalance += transferAmountValue
+            do {
+                try realm?.write {
+                    guard var fromCardBalance = Double(fromCard.cardBalance),
+                          var toCardBalance = Double(toCard.cardBalance) else {
+                        showAlert(message: "Invalid card balance.")
+                        return
+                    }
                     
-                    fromCard.cardBalance = String(format: "%.2f", fromBalance)
-                    toCard.cardBalance = String(format: "%.2f", toBalance)
+                    fromCardBalance -= amount
+                    toCardBalance += amount
                     
-                    print("Transfer uğurla tamamlandı.")
-                    self.transferAmount.text = ""
-                    self.fromPicker.reloadAllComponents()
-                    self.toPicker.reloadAllComponents()
-                 navigationController?.popViewController(animated: true)
-
+                    fromCard.cardBalance = String(fromCardBalance)
+                    toCard.cardBalance = String(toCardBalance)
+                    
+                    realm?.add(fromCard, update: .modified)
+                    realm?.add(toCard, update: .modified)
                 }
+                
+                showAlert(message: "Transfer successful!")
+                
+                fromLabel.text = "Click to select"
+                toLabel.text = "Click to select"
+                transferAmount.text = ""
+                
+            } catch {
+                showAlert(message: "An error occurred while processing the transfer.")
             }
-        } catch {
-            print("Transfer zamanı səhv baş verdi: \(error.localizedDescription)")
         }
-        
-          
+    }
+
+
+    func showAlert(message: String) {
+        let alert = UIAlertController(title: "Alert", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        self.present(alert, animated: true, completion: nil)
     }
 
     
@@ -175,94 +245,48 @@ class TransferController: BaseViewController {
             fromCard.heightAnchor.constraint(equalToConstant: 40)
         ])
         NSLayoutConstraint.activate([
-            fromPicker.topAnchor.constraint(equalTo: fromCard.bottomAnchor, constant: 0),
-            fromPicker.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
-            fromPicker.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
-            fromPicker.heightAnchor.constraint(equalToConstant: 56)
+            fromLabel.topAnchor.constraint(equalTo: fromCard.bottomAnchor, constant: 0),
+            fromLabel.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
+            fromLabel.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
+            fromLabel.heightAnchor.constraint(equalToConstant: 48)
         ])
-        
         NSLayoutConstraint.activate([
-            toCard.topAnchor.constraint(equalTo: fromPicker.bottomAnchor, constant: 32),
-            toCard.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
-            toCard.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
-            toCard.heightAnchor.constraint(equalToConstant: 40)
+        toCard.topAnchor.constraint(equalTo: fromLabel.bottomAnchor, constant: 32),
+        toCard.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
+        toCard.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
+        toCard.heightAnchor.constraint(equalToConstant: 40)
+    ])
+        NSLayoutConstraint.activate([
+            toLabel.topAnchor.constraint(equalTo: toCard.bottomAnchor, constant: 0),
+            toLabel.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
+            toLabel.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
+            toLabel.heightAnchor.constraint(equalToConstant: 48)
         ])
-        
         NSLayoutConstraint.activate([
-            toPicker.topAnchor.constraint(equalTo: toCard.bottomAnchor, constant: 0),
-            toPicker.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
-            toPicker.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
-            toPicker.heightAnchor.constraint(equalToConstant: 56)
-        ])
-        
-        NSLayoutConstraint.activate([
-            transferAmount.topAnchor.constraint(equalTo: toPicker.bottomAnchor, constant: 32),
+            transferAmount.topAnchor.constraint(equalTo: toLabel.bottomAnchor, constant: 32),
             transferAmount.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
             transferAmount.rightAnchor.constraint(equalTo: currencyLabel.leftAnchor, constant: -16),
             transferAmount.heightAnchor.constraint(equalToConstant: 40)
         ])
-        
         NSLayoutConstraint.activate([
-            currencyLabel.topAnchor.constraint(equalTo: toPicker.bottomAnchor, constant: 32),
+            currencyLabel.topAnchor.constraint(equalTo: toLabel.bottomAnchor, constant: 32),
             currencyLabel.leftAnchor.constraint(equalTo: transferAmount.rightAnchor, constant: 16),
             currencyLabel.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
             currencyLabel.heightAnchor.constraint(equalToConstant: 40),
             currencyLabel.widthAnchor.constraint(equalToConstant: 100)
         ])
-        
         NSLayoutConstraint.activate([
             transferButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -40),
             transferButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
             transferButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
-            transferButton.heightAnchor.constraint(equalToConstant: 40)
+            transferButton.heightAnchor.constraint(equalToConstant: 48)
         ])
-        
     }
 
 }
 
 extension TransferController: UITextFieldDelegate {
     func textFieldDidChangeSelection(_ textField: UITextField) {
-        let textField = transferAmount.text
     }
     
-}
-
-
-extension TransferController: UIPickerViewDelegate, UIPickerViewDataSource {
-    func numberOfComponents(in pickerView: UIPickerView) -> Int {
-        return 1
-    }
-    
-    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
-        return cardList?.count ?? 0
-    }
-    func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
-        var nameLabel: UILabel? = (view as? UILabel)
-        
-        if nameLabel == nil {
-            nameLabel = UILabel()
-            nameLabel?.font = UIFont.systemFont(ofSize: 12.0, weight: .semibold)
-            nameLabel?.textAlignment = .center
-        }
-        let card = cardList?[row]
-        nameLabel?.text = (card?.cardName ?? "Salam") + "  -  " + (card?.cardNumber ?? "Salam") + "  -  " + (card?.cardBalance ?? "Salam") + "AZN"
-        nameLabel?.textColor = .appGreen
-        return nameLabel!
-        
-    }
-    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-            return cardList?[row].cardName
-        }
-        
-        func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-            if pickerView == fromPicker {
-                let selectedCard = cardList?[row]
-//                let cardBalance = selectedCard?.cardBalance
-//                let displayBalance = Double(cardBalance ?? "0") ?? 0.0
-//                transferAmount.text = String(format: "%.2f"/*, displayBalance*/)
-            }
-            
-        }
-
 }

@@ -62,12 +62,7 @@ extension UITextField {
         }
         self.text = text
     }
-    
-    
 }
-
-
-
 
 extension UIImage {
     func resize(to size: CGSize) -> UIImage? {

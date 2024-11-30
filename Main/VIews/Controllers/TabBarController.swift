@@ -12,15 +12,12 @@ import UIKit
 
 class TabBarController: UITabBarController {
 
-    
     override func viewDidLoad() {
         super.viewDidLoad()
                 setupTabBar()
         UserDefaultsHelper.setInteger(key: UserDefaultsKey.loginType.rawValue, value: 2)
-            
     }
     
-
     private func setupTabBar() {
        
         self.tabBar.tintColor = .appGreen

@@ -12,19 +12,19 @@ class AddCardController: BaseViewController {
     
     private var cardList: Results<CardModel>?
     private let realm = try? Realm()
-
+    
     init() {
         super.init(nibName: nil, bundle: nil)
-            fetchCardList()
-        }
+        fetchCardList()
+    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
     func fetchCardList() {
-           self.cardList = realm?.objects(CardModel.self)
-       }
+        self.cardList = realm?.objects(CardModel.self)
+    }
     
     func saveCard(cardName: String, cardPan: String, cardExp: String, cardCVV: String, cardBalance:String) {
         let card = CardModel()
@@ -33,14 +33,14 @@ class AddCardController: BaseViewController {
         card.cardExpiration = cardExp
         card.cardName = cardName
         card.cardBalance = cardBalance
-            do {
-                try realm?.write {
-                    realm?.add(card)
-                }
-            } catch {
-                print("Error saving customer: \(error.localizedDescription)")
+        do {
+            try realm?.write {
+                realm?.add(card)
             }
+        } catch {
+            print("Error saving customer: \(error.localizedDescription)")
         }
+    }
     
     private var isVisa = false
     private var isMaster = false
@@ -50,12 +50,12 @@ class AddCardController: BaseViewController {
         let i = ReusableImageView(imageName: "cardBG", contentMode: .scaleAspectFill, cornerRadius: 0)
         return i
     }()
-   
+    
     private lazy var cardType: ReusableImageView = {
         let i = ReusableImageView(imageName: "type", contentMode: .scaleAspectFill, cornerRadius: 0)
         return i
     }()
-   
+    
     private lazy var cardNumberTF: ReusableTextField = {
         let t = ReusableTextField(placeholder: "0000 0000 0000 0000", placeholderColor: .white, borderColor: .white, texttColor: .white, bgColor: .clear)
         t.setCardNumberFormatting()
@@ -87,26 +87,26 @@ class AddCardController: BaseViewController {
     
     private lazy var cardName: ReusableTextField = {
         let t = ReusableTextField(placeholder: "CARDNAME", placeholderColor: .white, borderColor: .white, texttColor: .white, bgColor: .clear)
-    
+        
         t.font = UIFont(name: "Downtown", size: 14)
         t.delegate = self
         t.textAlignment = .center
         return t
     }()
-     
+    
     private lazy var balanceTF: ReusableTextField = {
         let tf = ReusableTextField(placeholder: "Add your balance", placeholderColor: .appGreen.withAlphaComponent(0.5), borderColor: .appGreen, texttColor: .appGreen, bgColor: .clear)
         tf.font = UIFont(name: "Downtown", size: 16)
         tf.delegate = self
         return tf
     }()
-
+    
     private lazy var addCardButton: ReusableButton = {
         let b = ReusableButton(title: "Add Card", buttonColor: .appGreen, onAction: {[weak self] in self?.submitButton()})
         return b
     }()
     
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         let realm = try! Realm()
@@ -115,33 +115,28 @@ class AddCardController: BaseViewController {
     }
     
     @objc func submitButton() {
-//        if phoneNumberTF.layer.borderColor == UIColor.green.cgColor && firstNameTF.layer.borderColor == UIColor.green.cgColor && lastNameTF.layer.borderColor == UIColor.green.cgColor && finCodeTF.layer.borderColor == UIColor.green.cgColor && emailTF.layer.borderColor == UIColor.green.cgColor && passwordTF.layer.borderColor == UIColor.green.cgColor && viewModel.isAllValid {
-//            
-            guard let name = cardName.text,
-                  let number = cardNumberTF.text,
-                  let exp = cardExpiry.text,
-                  let cvv = cardCVV.text,
-                  let balance = balanceTF.text
-                   else {return}
+        //        if phoneNumberTF.layer.borderColor == UIColor.green.cgColor && firstNameTF.layer.borderColor == UIColor.green.cgColor && lastNameTF.layer.borderColor == UIColor.green.cgColor && finCodeTF.layer.borderColor == UIColor.green.cgColor && emailTF.layer.borderColor == UIColor.green.cgColor && passwordTF.layer.borderColor == UIColor.green.cgColor && viewModel.isAllValid {
+        //
+        guard let name = cardName.text,
+              let number = cardNumberTF.text,
+              let exp = cardExpiry.text,
+              let cvv = cardCVV.text,
+              let balance = balanceTF.text
+        else {return}
         
         saveCard(cardName: name, cardPan: number, cardExp: exp, cardCVV: cvv, cardBalance: balance)
-
-            navigationController?.popViewController(animated: true)
-//        } else {
-//            showAlert(on: self)
-//        }
+        
+        navigationController?.popViewController(animated: true)
+        //        } else {
+        //            showAlert(on: self)
+        //        }
     }
     
     
     override func configureView() {
         super.configureView()
         view.addViews(view: [cardImage, cardNumberTF, cardName, cardExpiry, cardCVV, addCardButton, cardType, balanceTF])
- 
-        
     }
-    
-    
-    
     
     override func configureConstraint() {
         super.configureConstraint()
@@ -182,7 +177,7 @@ class AddCardController: BaseViewController {
             cardName.widthAnchor.constraint(equalToConstant: 144)
             
         ])
-    
+        
         NSLayoutConstraint.activate([
             cardType.centerYAnchor.constraint(equalTo: cardImage.centerYAnchor, constant: -80),
             cardType.rightAnchor.constraint(equalTo: cardImage.rightAnchor, constant: -40),
@@ -195,7 +190,7 @@ class AddCardController: BaseViewController {
             balanceTF.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
             balanceTF.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20),
             balanceTF.heightAnchor.constraint(equalToConstant: 40)
-      
+            
         ])
         
         NSLayoutConstraint.activate([
@@ -203,7 +198,7 @@ class AddCardController: BaseViewController {
             addCardButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32),
             addCardButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32),
             addCardButton.heightAnchor.constraint(equalToConstant: 40)
-
+            
         ])
         
     }
@@ -232,7 +227,7 @@ class AddCardController: BaseViewController {
         }
         
     }
-
+    
     private func checkCVV(){
         guard let cvv = cardCVV.text else {return}
         
@@ -269,7 +264,7 @@ class AddCardController: BaseViewController {
         } else {
             cardNumberTF.layer.borderColor = UIColor.red.cgColor
             cardNumberTF.textColor = .red
-
+            
             cardType.image = UIImage(named: "type")
             isVisa = false
             isMaster = false
@@ -277,32 +272,32 @@ class AddCardController: BaseViewController {
     }
 }
 
-    extension AddCardController: UITextFieldDelegate {
-        func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-            if textField == cardName {
-                return true
-            } else {
-                let allowedCharacters = CharacterSet.decimalDigits
-                let characterSet = CharacterSet(charactersIn: string)
-                return allowedCharacters.isSuperset(of: characterSet)
-            }
-        }
-
-        func textFieldDidChangeSelection(_ textField: UITextField) {
-            switch textField {
-            case cardNumberTF:
-                updateCardTypeImage()
-            case cardExpiry:
-                checkExpiration()
-            case cardCVV:
-                checkCVV()
-            case cardName:
-                checkName()
-            default: return
-                
-            }
+extension AddCardController: UITextFieldDelegate {
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        if textField == cardName {
+            return true
+        } else {
+            let allowedCharacters = CharacterSet.decimalDigits
+            let characterSet = CharacterSet(charactersIn: string)
+            return allowedCharacters.isSuperset(of: characterSet)
         }
     }
-
     
+    func textFieldDidChangeSelection(_ textField: UITextField) {
+        switch textField {
+        case cardNumberTF:
+            updateCardTypeImage()
+        case cardExpiry:
+            checkExpiration()
+        case cardCVV:
+            checkCVV()
+        case cardName:
+            checkName()
+        default: return
+            
+        }
+    }
+}
+
+
 

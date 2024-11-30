@@ -22,12 +22,10 @@ class ReusableButton: UIButton {
         setupUI()
     }
     
-        
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
 
     }
-    
     
     func setupUI() {
         setTitle(title, for: .normal)

@@ -10,13 +10,9 @@ import RealmSwift
 
 class CardController: BaseViewController {
     
-    
     var selectedIndex: Int?
-
     private let realm = try? Realm()
     var cardList: Results<CardModel>?
-    
-
     
     init() {
         super.init(nibName: nil, bundle: nil)
@@ -32,7 +28,7 @@ class CardController: BaseViewController {
     }
     
     private lazy var cardCollection: UICollectionView = {
-       let flowLayout = UICollectionViewFlowLayout()
+        let flowLayout = UICollectionViewFlowLayout()
         let c = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
         flowLayout.scrollDirection = .horizontal
         flowLayout.minimumLineSpacing = 0
@@ -46,10 +42,10 @@ class CardController: BaseViewController {
         c.translatesAutoresizingMaskIntoConstraints = false
         c.backgroundColor = .clear
         return c
-
+        
     }()
     
- 
+    
     
     private lazy var plusImage: UIImageView = {
         let iv = UIImageView()
@@ -60,7 +56,7 @@ class CardController: BaseViewController {
         iv.isUserInteractionEnabled = true
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(addCardFunction))
         iv.addGestureRecognizer(tapGesture)
-
+        
         return iv
     }()
     
@@ -75,7 +71,7 @@ class CardController: BaseViewController {
         iv.isUserInteractionEnabled = true
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tranferFunction))
         iv.addGestureRecognizer(tapGesture)
-
+        
         return iv
     }()
     
@@ -88,16 +84,21 @@ class CardController: BaseViewController {
         iv.isUserInteractionEnabled = true
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(deleteCardFunction))
         iv.addGestureRecognizer(tapGesture)
-
+        
         return iv
     }()
     
+    private lazy var balanceLabel: ReusableLabel = {
+        let l = ReusableLabel(text: "124 AZN", textAlignment: .center, fontName: "Revue", fontSize: 12, textColor: .white, numberOfLines: 0, cornerRadius: 10)
+        l.backgroundColor = .clear
+        return l
+    }()
     
     private lazy var pageControl: UIPageControl = {
         let pc = UIPageControl()
         pc.translatesAutoresizingMaskIntoConstraints = false
         pc.numberOfPages = self.cardList?.count ?? 0
-
+        
         pc.currentPage = 0
         pc.pageIndicatorTintColor = .lightGray
         pc.currentPageIndicatorTintColor = .black
@@ -105,61 +106,71 @@ class CardController: BaseViewController {
         return pc
     }()
     @objc private func pageControlTapped(_ sender: UIPageControl) {
-
+        
         let currentPage = sender.currentPage
         let indexPath = IndexPath(item: currentPage, section: 0)
         cardCollection.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
     }
-
+    
     
     
     @objc func addCardFunction(){
         navigationController?.pushViewController(AddCardController(), animated: true)
         navigationController?.navigationBar.tintColor = .appGreen
-
+        
     }
     
     @objc func tranferFunction(){
-        navigationController?.pushViewController(TransferController(), animated: true)
-        navigationController?.navigationBar.tintColor = .white
-    }
-
-    @objc func deleteCardFunction() {
-        guard let index = selectedIndex, let cardToDelete = cardList?[index] else {
-            print("No card selected or invalid index.")
-            return
-        }
-        
-        do {
-            try realm?.write {
-                realm?.delete(cardToDelete)
-            }
-
-
-            fetchCustomerList()
-
-            if let updatedCardList = cardList, !updatedCardList.isEmpty {
-                selectedIndex = min(index, updatedCardList.count - 1)
-            } else {
-                selectedIndex = nil
-            }
-            cardCollection.reloadData()
-            pageControl.numberOfPages = cardList?.count ?? 0
-            pageControl.currentPage = selectedIndex ?? 0
-      
-        } catch {
-            print("Error deleting card: \(error)")
+        if cardList?.count ?? 1 < 2 {
+            showAlert(message: "You need to have at least 2 cards")
+        } else {
+            navigationController?.pushViewController(TransferController(), animated: true)
+            navigationController?.navigationBar.tintColor = .white
         }
     }
-
+    func showAlert(message: String) {
+        let alert = UIAlertController(title: "ALERT", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        self.present(alert, animated: true, completion: nil)
+    }
     
+    @objc func deleteCardFunction() {
+        if cardList?.count ?? 1 > 1{
+            guard let index = selectedIndex, let cardToDelete = cardList?[index] else {
+                print("No card selected or invalid index.")
+                return
+            }
+            
+            do {
+                try realm?.write {
+                    realm?.delete(cardToDelete)
+                }
+                
+                fetchCustomerList()
+                
+                if let updatedCardList = cardList, !updatedCardList.isEmpty {
+                    selectedIndex = min(index, updatedCardList.count - 1)
+                } else {
+                    selectedIndex = nil
+                }
+                cardCollection.reloadData()
+                pageControl.numberOfPages = cardList?.count ?? 0
+                pageControl.currentPage = selectedIndex ?? 0
+                
+            } catch {
+                print("Error deleting card: \(error)")
+            }
+        } else {
+            showAlert(message: "You need to have at least 1 cards")
+            
+        }
+    }
     
     override func viewDidLoad() {
-        super.viewDidLoad()  
-
+        super.viewDidLoad()
+        
         
     }
-    
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -167,19 +178,10 @@ class CardController: BaseViewController {
         cardCollection.reloadData()
         pageControl.numberOfPages = cardList?.count ?? 0
     }
-
-    
-    
     
     override func configureView() {
         super.configureView()
-        view.addSubview(cardCollection)
-        view.addSubview(plusImage)
-        view.addSubview(transferIcon)
-        view.addSubview(trashIcon)
-        view.addSubview(pageControl)
-
-
+        view.addViews(view: [cardCollection, plusImage, transferIcon, trashIcon, pageControl])
     }
     
     override func configureConstraint() {
@@ -201,12 +203,9 @@ class CardController: BaseViewController {
         NSLayoutConstraint.activate([
             trashIcon.topAnchor.constraint(equalTo: pageControl.bottomAnchor, constant: 10),
             trashIcon.leadingAnchor.constraint(equalTo: transferIcon.trailingAnchor, constant: 20),
-
             trashIcon.heightAnchor.constraint(equalToConstant: 40),
             trashIcon.widthAnchor.constraint(equalTo: transferIcon.heightAnchor, multiplier: 1)
         ])
-
-        
         
         NSLayoutConstraint.activate([
             cardCollection.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 0),
@@ -221,12 +220,9 @@ class CardController: BaseViewController {
             pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             pageControl.heightAnchor.constraint(equalToConstant: 20)
         ])
-
     }
-
-
 }
-    
+
 extension CardController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout{
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         self.cardList?.count ?? 0
@@ -236,19 +232,17 @@ extension CardController: UICollectionViewDelegate, UICollectionViewDataSource, 
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CardCell", for: indexPath) as! CardCell
         selectedIndex = indexPath.row
         fetchCustomerList()
-        
         let card = cardList?[indexPath.row]
         cell.cardName.text = card?.cardName
         cell.cardNumber.text = " **** " + (card?.cardNumber.suffix(4) ?? "****")
         cell.cardExp.text = card?.cardExpiration
+        cell.balanceLabel.text = "₼" + (card?.cardBalance ?? "0")
         return cell
         
     }
-
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-           let pageIndex = round(scrollView.contentOffset.x / scrollView.frame.width)
-           pageControl.currentPage = Int(pageIndex)
-       }
     
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let pageIndex = round(scrollView.contentOffset.x / scrollView.frame.width)
+        pageControl.currentPage = Int(pageIndex)
+    }
 }
-
