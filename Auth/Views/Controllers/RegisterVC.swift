@@ -338,6 +338,10 @@ class RegisterVC: UIViewController {
         
     }
     
+    fileprivate func saveUserToDefault(user: Customer?) {
+        UserDefaults.standard.setValue(user?.name, forKey: "username")
+        UserDefaults.standard.setValue(user?.emailAddress, forKey: "email")
+    }
     
     fileprivate func configureView(){
         view.addSubview(imageView)

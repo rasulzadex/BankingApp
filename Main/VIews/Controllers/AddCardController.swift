@@ -6,41 +6,21 @@
 //
 
 import UIKit
-import RealmSwift
 
 class AddCardController: BaseViewController {
     
-    private var cardList: Results<CardModel>?
-    private let realm = try? Realm()
+    private var viewModel: AddCardViewModel
     
-    init() {
+    init(viewModel: AddCardViewModel) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
-        fetchCardList()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func fetchCardList() {
-        self.cardList = realm?.objects(CardModel.self)
-    }
-    
-    func saveCard(cardName: String, cardPan: String, cardExp: String, cardCVV: String, cardBalance:String) {
-        let card = CardModel()
-        card.cardCVV = cardCVV
-        card.cardNumber = cardPan
-        card.cardExpiration = cardExp
-        card.cardName = cardName
-        card.cardBalance = cardBalance
-        do {
-            try realm?.write {
-                realm?.add(card)
-            }
-        } catch {
-            print("Error saving customer: \(error.localizedDescription)")
-        }
-    }
+  
     
     private var isVisa = false
     private var isMaster = false
@@ -109,30 +89,25 @@ class AddCardController: BaseViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let realm = try! Realm()
-        print("Realm path", realm.configuration.fileURL!)
         
     }
     
     @objc func submitButton() {
-        //        if phoneNumberTF.layer.borderColor == UIColor.green.cgColor && firstNameTF.layer.borderColor == UIColor.green.cgColor && lastNameTF.layer.borderColor == UIColor.green.cgColor && finCodeTF.layer.borderColor == UIColor.green.cgColor && emailTF.layer.borderColor == UIColor.green.cgColor && passwordTF.layer.borderColor == UIColor.green.cgColor && viewModel.isAllValid {
-        //
-        guard let name = cardName.text,
-              let number = cardNumberTF.text,
-              let exp = cardExpiry.text,
-              let cvv = cardCVV.text,
-              let balance = balanceTF.text
-        else {return}
+        viewModel.cardName = cardName.text
+        viewModel.cardNumber = cardNumberTF.text
+        viewModel.cardExpiry = cardExpiry.text
+        viewModel.cardCVV = cardCVV.text
+        viewModel.balance = balanceTF.text
         
-        saveCard(cardName: name, cardPan: number, cardExp: exp, cardCVV: cvv, cardBalance: balance)
-        
-        navigationController?.popViewController(animated: true)
-        //        } else {
-        //            showAlert(on: self)
-        //        }
+        if !viewModel.isCardNumberValid, !viewModel.isCardNameValid, !viewModel.isCardExpiryValid,!viewModel.isBalanceValid {
+            showAlert(message: "Please enter a valid card info.")
+        } else {
+                viewModel.saveCard()
+                navigationController?.popViewController(animated: true)
+            }
     }
     
-    
+
     override func configureView() {
         super.configureView()
         view.addViews(view: [cardImage, cardNumberTF, cardName, cardExpiry, cardCVV, addCardButton, cardType, balanceTF])

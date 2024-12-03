@@ -5,8 +5,11 @@ final class LoginViewModel {
     
     private let realm = try? Realm()
     var customerList: Results<Customer>?
-    lazy var numberCheck = ""
-    lazy var passCheck = ""
+    
+
+    
+    lazy var numberCheck = false
+    lazy var passCheck = false
     
     init() {
         fetchCustomerList() 
@@ -14,26 +17,30 @@ final class LoginViewModel {
     
     func fetchCustomerList() {
         self.customerList = realm?.objects(Customer.self)
+    
     }
     
     func performLogin(phoneNumber: String, password: String) {
+        
+        
         guard let customers = customerList else {
-            numberCheck = "Failed to fetch customers."
+            numberCheck = false
+           print( "Failed to fetch customers.")
             return
         }
 
         for customer in customers {
             if phoneNumber == customer.phoneNumber {
-                numberCheck = "Phone number found"
+                numberCheck = true
                 if password == customer.customerPassword {
-                    passCheck = "Password is correct"
+                    passCheck = true
                 } else {
-                    passCheck = "Password is incorrect"
+                    passCheck = false
                 }
                 return
             }
         }
 
-        numberCheck = "This phone number is not registered"
+        numberCheck = false
     }
 }

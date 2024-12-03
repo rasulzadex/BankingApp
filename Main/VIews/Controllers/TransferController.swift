@@ -9,28 +9,22 @@ import UIKit
 import RealmSwift
 
 class TransferController: BaseViewController {
-
-    private let realm = try? Realm()
-    var cardList: Results<CardModel>?
     
-    var selectedFromCardRow: Int?
-    var selectedToCardRow: Int?
-    
-    
+    private let viewModel = TransferViewModel()
     var selectedFromCard: CardModel?
-        var selectedToCard: CardModel?
+    var selectedToCard: CardModel?
     
     init() {
         super.init(nibName: nil, bundle: nil)
-        fetchCustomerList()
+        fetchCardList()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func fetchCustomerList() {
-        self.cardList = realm?.objects(CardModel.self)
+    func fetchCardList() {
+        viewModel.fetchCardList() // Call the ViewModel to fetch cards
     }
     
     private lazy var greenView: UILabel = {
@@ -56,6 +50,16 @@ class TransferController: BaseViewController {
         
     }()
     
+    private lazy var cardType: ReusableImageView = {
+        let i = ReusableImageView(imageName: " ", contentMode: .scaleAspectFill)
+        return i
+    }()
+    
+    private lazy var cardTypeTo: ReusableImageView = {
+        let i = ReusableImageView(imageName: " ", contentMode: .scaleAspectFill)
+        return i
+    }()
+    
     private lazy var transferAmount: ReusableTextField = {
         let t = ReusableTextField(placeholder: "Transfer amount", placeholderColor: .appGreen, borderColor: .white, texttColor: .appGreen, bgColor: .white.withAlphaComponent(0.7))
         t.delegate = self
@@ -65,7 +69,7 @@ class TransferController: BaseViewController {
     
     private lazy var fromLabel: ReusableLabel = {
         let l = ReusableLabel(text: "Click to select", textAlignment: .center, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 0, cornerRadius: 10)
-        l.backgroundColor = .white.withAlphaComponent(0.7)
+        
         l.isUserInteractionEnabled = true
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(fromCardAction))
@@ -73,11 +77,26 @@ class TransferController: BaseViewController {
         return l
     }()
     
+    private lazy var fromView: UIView = {
+        let v = UIView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.backgroundColor = .white.withAlphaComponent(0.7)
+        v.layer.cornerRadius = 10
+        return v
+    }()
+    
+    private lazy var toView: UIView = {
+        let v = UIView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.backgroundColor = .white.withAlphaComponent(0.7)
+        v.layer.cornerRadius = 10
+        return v
+        
+    }()
+    
     private lazy var toLabel: ReusableLabel = {
         let l = ReusableLabel(text: "Click to select", textAlignment: .center, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 0, cornerRadius:  10)
-        l.backgroundColor = .white.withAlphaComponent(0.7)
         l.isUserInteractionEnabled = true
-        
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(toCardAction))
         l.addGestureRecognizer(tapGesture)
         return l
@@ -99,133 +118,109 @@ class TransferController: BaseViewController {
         return b
     }()
     
+    private lazy var fromBalance: ReusableLabel = {
+        let l = ReusableLabel(text: "", textAlignment: .left, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 1, cornerRadius: 0)
+        l.font = UIFont.systemFont(ofSize: 16)
+        return l
+    }()
+    
+    private lazy var toBalance: ReusableLabel = {
+        let l = ReusableLabel(text: "", textAlignment: .left, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 1, cornerRadius: 0)
+        l.font = UIFont.systemFont(ofSize: 16)
+        return l
+    }()
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
     }
     override func configureView() {
         super.configureView()
-        view.addViews(view: [greenView, fromCard, toCard, fromLabel, toLabel, transferAmount, currencyLabel, transferButton])
+        view.addViews(view: [greenView,  fromView, toView, cardType, cardTypeTo, fromCard, toCard, fromLabel, toLabel, transferAmount, currencyLabel, transferButton, fromBalance, toBalance ])
     }
     
     @objc func transferAction() {
-        executeTransfer()
-//        navigationController?.popViewController(animated: true)
-        
-    }
-
-    @objc func fromCardAction() {
-        let vc = CardSelectionController()
-        
-        vc.sendCardinfo = { [weak self] card in
-                 self?.selectedFromCard = card
-                 self?.fromLabel.text = card.cardNumber
-             }
-        
-        if let sheet = vc.sheetPresentationController {
-            sheet.detents = [.medium(), .large()]
-            sheet.largestUndimmedDetentIdentifier = .medium
-            sheet.prefersScrollingExpandsWhenScrolledToEdge = false
-            sheet.prefersEdgeAttachedInCompactHeight = true
-            sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = true
-        }
-        present(vc, animated: true)
-    }
-
-    @objc func toCardAction() {
-        let vc = CardSelectionController()
-        
-        vc.sendCardinfo = { [weak self] card in
-                 self?.selectedToCard = card
-                 self?.toLabel.text = card.cardNumber
-             }
-        
-        if let sheet = vc.sheetPresentationController {
-            sheet.detents = [.medium(), .large()]
-            sheet.largestUndimmedDetentIdentifier = .medium
-            sheet.prefersScrollingExpandsWhenScrolledToEdge = false
-            sheet.prefersEdgeAttachedInCompactHeight = true
-            sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = true
-        }
-        present(vc, animated: true)
-    }
-    
-    func validateTransferAmount() -> Bool {
-        guard let amountText = transferAmount.text, let amount = Double(amountText), amount > 0 else {
+        // Validate transfer amount through the ViewModel
+        guard let amountText = transferAmount.text,
+              viewModel.validateTransferAmount(amountText: amountText, selectedFromCard: selectedFromCard) else {
             showAlert(message: "Please enter a valid transfer amount.")
-            return false
+            return
         }
-
-        guard let fromCard = selectedFromCard else {
-            showAlert(message: "Please select the 'from' card.")
-            return false
-        }
-
-        guard let fromCardBalance = Double(fromCard.cardBalance) else {
-            showAlert(message: "Invalid card balance.")
-            return false
-        }
-
-        if fromCardBalance < amount {
-            showAlert(message: "Insufficient balance on the selected card.")
-            return false
-        }
-
-        return true
-    }
-
-    
-    func executeTransfer() {
-        guard validateTransferAmount() else { return }
+        
+        // Execute transfer using the ViewModel
         guard let fromCard = selectedFromCard, let toCard = selectedToCard else {
             showAlert(message: "Please select both source and destination cards.")
             return
         }
+        
         if fromCard == toCard {
-            showAlert(message: "You cannot transfer between same card")
-        }else{
-            
+            showAlert(message: "You cannot transfer between the same card.")
+        } else {
             guard let amountText = transferAmount.text, let amount = Double(amountText) else {
                 showAlert(message: "Please enter a valid transfer amount.")
                 return
             }
+            viewModel.executeTransfer(fromCard: fromCard, toCard: toCard, amount: amount)
             
-            do {
-                try realm?.write {
-                    guard var fromCardBalance = Double(fromCard.cardBalance),
-                          var toCardBalance = Double(toCard.cardBalance) else {
-                        showAlert(message: "Invalid card balance.")
-                        return
-                    }
-                    
-                    fromCardBalance -= amount
-                    toCardBalance += amount
-                    
-                    fromCard.cardBalance = String(fromCardBalance)
-                    toCard.cardBalance = String(toCardBalance)
-                    
-                    realm?.add(fromCard, update: .modified)
-                    realm?.add(toCard, update: .modified)
-                }
-                
-                showAlert(message: "Transfer successful!")
-                
-                fromLabel.text = "Click to select"
-                toLabel.text = "Click to select"
-                transferAmount.text = ""
-                
-            } catch {
-                showAlert(message: "An error occurred while processing the transfer.")
-            }
+            navigationController?.popViewController(animated: true)
+            showAlert(message: "Transfer successful!")
+            
         }
     }
-
-
-    func showAlert(message: String) {
-        let alert = UIAlertController(title: "Alert", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        self.present(alert, animated: true, completion: nil)
+    
+    func resetUI() {
+        fromLabel.text = "Click to select"
+        toLabel.text = "Click to select"
+        transferAmount.text = ""
+        fromBalance.text = ""
+        toBalance.text = ""
+        cardTypeTo.image = UIImage(named: " ")
+        cardType.image = UIImage(named: " ")
+    }
+    
+    @objc func fromCardAction() {
+        let vc = CardSelectionController(viewModel: CardSelectionViewModel())
+        
+        vc.sendCardinfo = { [weak self] card in
+            self?.selectedFromCard = card
+            self?.fromLabel.text = card.cardNumber
+            self?.fromBalance.text = card.cardBalance
+            
+        }
+        
+        
+        if let sheet = vc.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.largestUndimmedDetentIdentifier = .medium
+            sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+            sheet.prefersEdgeAttachedInCompactHeight = true
+            sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = true
+        }
+        present(vc, animated: true)
+        cardType.image = UIImage(named: "master")
+        
+    }
+    
+    @objc func toCardAction() {
+        let vc = CardSelectionController(viewModel: CardSelectionViewModel())
+        
+        vc.sendCardinfo = { [weak self] card in
+            self?.selectedToCard = card
+            self?.toLabel.text = card.cardNumber
+            self?.toBalance.text = card.cardBalance
+        }
+        
+        if let sheet = vc.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.largestUndimmedDetentIdentifier = .medium
+            sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+            sheet.prefersEdgeAttachedInCompactHeight = true
+            sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = true
+        }
+        present(vc, animated: true)
+        cardTypeTo.image = UIImage(named: "master")
+        
     }
 
     
@@ -245,22 +240,22 @@ class TransferController: BaseViewController {
             fromCard.heightAnchor.constraint(equalToConstant: 40)
         ])
         NSLayoutConstraint.activate([
-            fromLabel.topAnchor.constraint(equalTo: fromCard.bottomAnchor, constant: 0),
-            fromLabel.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
-            fromLabel.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
-            fromLabel.heightAnchor.constraint(equalToConstant: 48)
+            fromView.topAnchor.constraint(equalTo: fromCard.bottomAnchor, constant: 0),
+            fromView.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
+            fromView.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
+            fromView.heightAnchor.constraint(equalToConstant: 48)
         ])
         NSLayoutConstraint.activate([
-        toCard.topAnchor.constraint(equalTo: fromLabel.bottomAnchor, constant: 32),
+        toCard.topAnchor.constraint(equalTo: fromView.bottomAnchor, constant: 32),
         toCard.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
         toCard.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
         toCard.heightAnchor.constraint(equalToConstant: 40)
     ])
         NSLayoutConstraint.activate([
-            toLabel.topAnchor.constraint(equalTo: toCard.bottomAnchor, constant: 0),
-            toLabel.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
-            toLabel.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
-            toLabel.heightAnchor.constraint(equalToConstant: 48)
+            toView.topAnchor.constraint(equalTo: toCard.bottomAnchor, constant: 0),
+            toView.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 24),
+            toView.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
+            toView.heightAnchor.constraint(equalToConstant: 48)
         ])
         NSLayoutConstraint.activate([
             transferAmount.topAnchor.constraint(equalTo: toLabel.bottomAnchor, constant: 32),
@@ -281,6 +276,59 @@ class TransferController: BaseViewController {
             transferButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24),
             transferButton.heightAnchor.constraint(equalToConstant: 48)
         ])
+        
+        NSLayoutConstraint.activate([
+            fromLabel.leftAnchor.constraint(equalTo: cardType.rightAnchor, constant: 0),
+            fromLabel.rightAnchor.constraint(equalTo: fromBalance.leftAnchor, constant: 0),
+            fromLabel.topAnchor.constraint(equalTo: fromView.topAnchor, constant: 2),
+            fromLabel.heightAnchor.constraint(equalToConstant: 44),
+            
+            toLabel.leftAnchor.constraint(equalTo: cardTypeTo.rightAnchor, constant: 0),
+            toLabel.rightAnchor.constraint(equalTo: toBalance.leftAnchor, constant: 0),
+            toLabel.topAnchor.constraint(equalTo: toView.topAnchor, constant: 2),
+            toLabel.heightAnchor.constraint(equalToConstant: 44),
+            
+        ])
+        
+        NSLayoutConstraint.activate([
+            cardType.leftAnchor.constraint(equalTo: fromView.leftAnchor, constant: 16),
+            cardType.rightAnchor.constraint(equalTo: fromLabel.leftAnchor, constant: 0),
+            cardType.topAnchor.constraint(equalTo: fromView.topAnchor, constant: 2),
+            cardType.heightAnchor.constraint(equalToConstant: 44),
+            cardType.widthAnchor.constraint(equalToConstant: 44)
+            
+        ])
+        
+        
+        NSLayoutConstraint.activate([
+            cardTypeTo.leftAnchor.constraint(equalTo: toView.leftAnchor, constant: 16),
+            cardTypeTo.rightAnchor.constraint(equalTo: toLabel.leftAnchor, constant: 0),
+            cardTypeTo.topAnchor.constraint(equalTo: toView.topAnchor, constant: 2),
+            cardTypeTo.heightAnchor.constraint(equalToConstant: 44),
+            cardTypeTo.widthAnchor.constraint(equalToConstant: 44)
+            
+        ])
+        
+        
+        NSLayoutConstraint.activate([
+            fromBalance.leftAnchor.constraint(equalTo: fromLabel.rightAnchor, constant: 0),
+            fromBalance.rightAnchor.constraint(equalTo: fromView.rightAnchor, constant: -16),
+            fromBalance.topAnchor.constraint(equalTo: fromView.topAnchor, constant: 2),
+            fromBalance.heightAnchor.constraint(equalToConstant: 44),
+            fromBalance.widthAnchor.constraint(equalToConstant: 64)
+            
+        ])
+        
+        NSLayoutConstraint.activate([
+            toBalance.leftAnchor.constraint(equalTo: toLabel.rightAnchor, constant: 0),
+            toBalance.rightAnchor.constraint(equalTo: toView.rightAnchor, constant: -16),
+            toBalance.topAnchor.constraint(equalTo: toView.topAnchor, constant: 2),
+            toBalance.heightAnchor.constraint(equalToConstant: 44),
+            toBalance.widthAnchor.constraint(equalToConstant: 64)
+            
+        ])
+        
+        
     }
 
 }

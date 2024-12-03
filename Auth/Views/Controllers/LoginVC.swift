@@ -215,16 +215,23 @@ class LoginVC: UIViewController {
         
         viewModel.performLogin(phoneNumber: phoneNumber, password: password)
         
-        if viewModel.numberCheck == "Failed to fetch customers." {
-            showAlert(on: self, message: viewModel.numberCheck)
-        } else if viewModel.numberCheck == "This phone number is not registered" {
-            showAlert(on: self, message: viewModel.numberCheck)
-        } else if viewModel.passCheck == "Password is incorrect" {
-            showAlert(on: self, message: viewModel.passCheck)
-        } else if viewModel.passCheck == "Password is correct" {
-                showCard()
+
+        
+        if !viewModel.numberCheck {
+            showAlert(message: "incorrect number")
+        } else if !viewModel.passCheck{
+            showAlert(message: "incorrect pass")
+        } else if viewModel.passCheck {
+          if let customer = viewModel.customerList?.first(where: { $0.phoneNumber == phoneNumber }) {
+              UserDefaults.standard.set(customer.name, forKey: "firstName")
+              UserDefaults.standard.set(customer.lastName, forKey: "lastName")
+              UserDefaults.standard.set(customer.phoneNumber, forKey: "phone")
+              UserDefaults.standard.set(customer.emailAddress, forKey: "email")
+        }
+            showCard()
 
         }
+
         
     }
 

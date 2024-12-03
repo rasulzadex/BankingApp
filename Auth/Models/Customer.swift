@@ -18,7 +18,5 @@ class Customer: Object {
     @Persisted var phoneNumber: String
     @Persisted var emailAddress: String
     @Persisted var customerPassword: String?
-    @Persisted var cardInfo: List<CardModel>
-
-    
+    @Persisted var cardInfo: List<CardModel> 
 }

@@ -11,13 +11,11 @@ import UIKit
 import UIKit
 
 class TabBarController: UITabBarController {
-
     override func viewDidLoad() {
         super.viewDidLoad()
                 setupTabBar()
         UserDefaultsHelper.setInteger(key: UserDefaultsKey.loginType.rawValue, value: 2)
     }
-    
     private func setupTabBar() {
        
         self.tabBar.tintColor = .appGreen
@@ -30,13 +28,7 @@ class TabBarController: UITabBarController {
         let firstTab = CardController()
         firstTab.view.backgroundColor = .clear
         firstTab.tabBarItem = UITabBarItem(title: "Home", image: UIImage(named: "homeTab")?.resize(to: CGSize(width: 25, height: 25)), tag: 0)
-       
-//
-//        let secondTab = TransferController()
-//        secondTab.view.backgroundColor = .red
-//        secondTab.tabBarItem = UITabBarItem(title: "Transfer", image: UIImage(named: "transferTab")?.resize(to: CGSize(width: 25, height: 25)), tag: 1)
-        
-        
+    
         let thirdTab = ProfileController()
         thirdTab.view.backgroundColor = .red
         thirdTab.tabBarItem = UITabBarItem(title: "Profile", image: UIImage(systemName: "person.crop.circle.fill"), tag: 1)

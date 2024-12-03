@@ -6,29 +6,25 @@
 //
 
 import UIKit
-import RealmSwift
 
 final class CardSelectionController: BaseViewController {
     
     var selectedIndex: Int?
-
-    private let realm = try? Realm()
-    var cardList: Results<CardModel>?
-    
-    var sendCardinfo: ((CardModel) -> Void)?
-
-    
-    init() {
-        super.init(nibName: nil, bundle: nil)
-        fetchCustomerList()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
+        var viewModel: CardSelectionViewModel
+        
+        var sendCardinfo: ((CardModel) -> Void)?
+        
+        init(viewModel: CardSelectionViewModel) {
+            self.viewModel = viewModel
+            super.init(nibName: nil, bundle: nil)
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+  
     func fetchCustomerList() {
-        self.cardList = realm?.objects(CardModel.self)
+        viewModel.fetchCustomerList()
     }
     
     private lazy var cardSelectionTable: UITableView = {
@@ -39,14 +35,15 @@ final class CardSelectionController: BaseViewController {
         t.backgroundColor = .clear
         t.register(CardTableCell.self, forCellReuseIdentifier: "CardTableCell")
         t.estimatedRowHeight = 100
-
         return t
     }()
-    
+       
     override func viewDidLoad() {
         super.viewDidLoad()
         fetchCustomerList()
-        cardSelectionTable.reloadData()
+        viewModel.reloadCallback = { [weak self] in
+                   self?.cardSelectionTable.reloadData()
+               }
 
     }
     
@@ -73,7 +70,7 @@ final class CardSelectionController: BaseViewController {
 
 extension CardSelectionController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        cardList?.count ?? 10
+        viewModel.cardList?.count ?? 5
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -81,7 +78,7 @@ extension CardSelectionController: UITableViewDelegate, UITableViewDataSource {
         selectedIndex = indexPath.row
         fetchCustomerList()
         
-        let card = cardList?[indexPath.row]
+        let card = viewModel.cardList?[indexPath.row]
         cell.cardNumber.text = card?.cardNumber
         cell.cardBalance.text = (card?.cardBalance ?? "0") + " AZN"
         
@@ -93,9 +90,10 @@ extension CardSelectionController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-            guard let card = cardList?[indexPath.row] else { return }
-            sendCardinfo?(card)
-dismiss(animated: true)        }
+        guard let card = viewModel.cardList?[indexPath.row] else { return }
+        sendCardinfo?(card)
+        dismiss(animated: true)   
+    }
     
 }
 

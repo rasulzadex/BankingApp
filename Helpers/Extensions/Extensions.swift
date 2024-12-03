@@ -219,3 +219,12 @@ extension UIView {
         view.forEach {self.addSubview($0)}
     }
 }
+
+
+extension UIViewController {
+    func showAlert(message: String) {
+        let alert = UIAlertController(title: "ALERT", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        self.present(alert, animated: true, completion: nil)
+    }
+}

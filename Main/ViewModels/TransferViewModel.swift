@@ -4,45 +4,56 @@
 //
 //  Created by Javidan on 27.11.24.
 //
-
-import Foundation
 import RealmSwift
 
 class TransferViewModel {
     private let realm = try? Realm()
-    private(set) var cardList: [CardModel] = []
-    var selectedFromCard: CardModel?
-    var selectedToCard: CardModel?
     
-    init() {
-        fetchCardList()
+    var cardList: Results<CardModel>?
+
+    func fetchCardList() {
+        self.cardList = realm?.objects(CardModel.self)
     }
     
-    private func fetchCardList() {
-        if let results = realm?.objects(CardModel.self) {
-            cardList = Array(results)
+    func validateTransferAmount(amountText: String?, selectedFromCard: CardModel?) -> Bool {
+        guard let amountText = amountText, let amount = Double(amountText), amount > 0 else {
+            return false
         }
+
+        guard let fromCard = selectedFromCard else {
+            return false
+        }
+
+        guard let fromCardBalance = Double(fromCard.cardBalance) else {
+            return false
+        }
+
+        if fromCardBalance < amount {
+            return false
+        }
+
+        return true
     }
     
-    func transferAmount(amount: Double) -> String {
-        guard let fromCard = selectedFromCard, let toCard = selectedToCard else {
-            return "No card selected"
-        }
-        
-        guard let fromBalance = Double(fromCard.cardBalance), fromBalance >= amount else {
-            return "Not available balance"
-        }
-        
-        
+    func executeTransfer(fromCard: CardModel, toCard: CardModel, amount: Double) {
         do {
             try realm?.write {
-                fromCard.cardBalance = String(format: "%.2f", fromBalance - amount)
-                toCard.cardBalance = String(format: "%.2f", Double(toCard.cardBalance)! + amount)
+                guard var fromCardBalance = Double(fromCard.cardBalance),
+                      var toCardBalance = Double(toCard.cardBalance) else {
+                    return
+                }
+
+                fromCardBalance -= amount
+                toCardBalance += amount
+
+                fromCard.cardBalance = String(fromCardBalance)
+                toCard.cardBalance = String(toCardBalance)
+
+                realm?.add(fromCard, update: .modified)
+                realm?.add(toCard, update: .modified)
             }
-            return "Transfer success"
         } catch {
-            return "Transfer error"
+            print("An error occurred while processing the transfer.")
         }
-        
     }
 }
