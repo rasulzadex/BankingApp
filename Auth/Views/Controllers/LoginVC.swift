@@ -106,6 +106,14 @@ class LoginVC: UIViewController {
         
     }()
     
+    private lazy var activityIndicator: UIActivityIndicatorView = {
+            let i = UIActivityIndicatorView(style: .large)
+            i.center = self.view.center
+            i.hidesWhenStopped = true
+        i.translatesAutoresizingMaskIntoConstraints = false
+            return i
+        }()
+    
     
     private lazy var passwordLabel: UILabel = {
     
@@ -222,17 +230,19 @@ class LoginVC: UIViewController {
         } else if !viewModel.passCheck{
             showAlert(message: "incorrect pass")
         } else if viewModel.passCheck {
+            
           if let customer = viewModel.customerList?.first(where: { $0.phoneNumber == phoneNumber }) {
               UserDefaults.standard.set(customer.name, forKey: "firstName")
               UserDefaults.standard.set(customer.lastName, forKey: "lastName")
               UserDefaults.standard.set(customer.phoneNumber, forKey: "phone")
               UserDefaults.standard.set(customer.emailAddress, forKey: "email")
         }
-            showCard()
-
+            activityIndicator.startAnimating()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                self.showCard()
+                self.activityIndicator.stopAnimating()
+                    }
         }
-
-        
     }
 
 
@@ -259,21 +269,9 @@ class LoginVC: UIViewController {
         }
     
     fileprivate func addSubviews(){
-        view.addSubview(bubbleBG)
-        view.addSubview(logoGreen)
-        view.addSubview(scrollView)
+        view.addViews(view: [ bubbleBG, logoGreen, scrollView, activityIndicator])
         scrollView.addSubview(containerView)
-        containerView.addSubview(phoneNumberTextF)
-        containerView.addSubview(passwordTextF)
-        containerView.addSubview(loginButton)
-        containerView.addSubview(signupButton)
-        containerView.addSubview(phoneLabel)
-        containerView.addSubview(passwordLabel)
-        containerView.addSubview(dontHaveAccountLabel)
-        containerView.addSubview(closedEyeImage)
-
-
-
+        containerView.addViews(view: [phoneNumberTextF,passwordTextF, loginButton, signupButton, phoneLabel, passwordLabel, dontHaveAccountLabel, closedEyeImage])
 
     }
     
@@ -369,21 +367,12 @@ class LoginVC: UIViewController {
             dontHaveAccountLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -20)
        
         ])
-
-    
         
-    
+        NSLayoutConstraint.activate([
+               activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+               activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+           ])
     }
-    
-//    func fetchCustomers() -> [Customer]? {
-//        guard let realm = realm else { // Check if Realm initialization was successful
-//            print("Error initializing Realm.")
-//            return nil
-//        }
-//        
-//        let customers = realm.objects(Customer.self)
-//        return Array(customers)
-//    }
 }
 
 extension LoginVC: UITextFieldDelegate {

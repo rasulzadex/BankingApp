@@ -1,5 +1,5 @@
 //
-//  AddCardController.swift
+//  ProfileController.swift
 //  BankAPP
 //
 //  Created by Javidan on 13.11.24.
@@ -67,12 +67,12 @@ class ProfileController: BaseViewController {
     }
     
     @objc func logOutAction() {
-        logoutAlert(message: "Click yes to logout")
+        logoutAlert(message: "Hope to see you soon")
     }
     
     
     func logoutAlert(message: String) {
-        let alert = UIAlertController(title: "Do you want to log out?", message: message, preferredStyle: .alert)
+        let alert = UIAlertController(title: "Are you logging out?", message: message, preferredStyle: .alert)
         
         let yesAction = UIAlertAction(title: "Log out", style: .default) { _ in
             if let scene = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {

@@ -82,7 +82,7 @@ class AddCardController: BaseViewController {
     }()
     
     private lazy var addCardButton: ReusableButton = {
-        let b = ReusableButton(title: "Add Card", buttonColor: .appGreen, onAction: {[weak self] in self?.submitButton()})
+        let b = ReusableButton(title: "Add Card", buttonColor: .appGreen, onAction: {[weak self] in self?.addCardClick()})
         return b
     }()
     
@@ -92,19 +92,21 @@ class AddCardController: BaseViewController {
         
     }
     
-    @objc func submitButton() {
+    @objc func addCardClick() {
         viewModel.cardName = cardName.text
         viewModel.cardNumber = cardNumberTF.text
         viewModel.cardExpiry = cardExpiry.text
         viewModel.cardCVV = cardCVV.text
         viewModel.balance = balanceTF.text
         
-        if !viewModel.isCardNumberValid, !viewModel.isCardNameValid, !viewModel.isCardExpiryValid,!viewModel.isBalanceValid {
-            showAlert(message: "Please enter a valid card info.")
+        if viewModel.isCardNameValid, viewModel.isCardNumberValid, viewModel.isCardExpiryValid, viewModel.isCardCVVValid, viewModel.isBalanceValid {
+            viewModel.saveCard()
+            navigationController?.popViewController(animated: true)
         } else {
-                viewModel.saveCard()
-                navigationController?.popViewController(animated: true)
-            }
+                showAlert(message: "Invalid card info")
+        }
+        
+        
     }
     
 

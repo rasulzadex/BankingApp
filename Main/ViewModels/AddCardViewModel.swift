@@ -6,6 +6,7 @@
 //
 import Foundation
 import RealmSwift
+import UIKit
 
 class AddCardViewModel {
     
@@ -38,10 +39,10 @@ class AddCardViewModel {
         return !(balance?.isEmpty ?? true)
     }
     
+  
+
     func saveCard() {
-        guard isCardNameValid, isCardNumberValid, isCardExpiryValid, isCardCVVValid, isBalanceValid else {
-            return
-        }
+        guard isCardNameValid, isCardNumberValid, isCardExpiryValid, isCardCVVValid, isBalanceValid else { return }
         let card = CardModel()
         card.cardName = cardName ?? ""
         card.cardNumber = cardNumber ?? ""
