@@ -7,7 +7,14 @@
 
 import UIKit
 
+protocol CardControllerDelegate: AnyObject {
+    func didAddCard()
+}
+
+
 class AddCardController: BaseViewController {
+    
+    weak var delegate: CardControllerDelegate?
     
     private var viewModel: AddCardViewModel
     
@@ -101,7 +108,9 @@ class AddCardController: BaseViewController {
         
         if viewModel.isCardNameValid, viewModel.isCardNumberValid, viewModel.isCardExpiryValid, viewModel.isCardCVVValid, viewModel.isBalanceValid {
             viewModel.saveCard()
+            delegate?.didAddCard()
             navigationController?.popViewController(animated: true)
+            
         } else {
                 showAlert(message: "Invalid card info")
         }
@@ -133,7 +142,6 @@ class AddCardController: BaseViewController {
         ])
         
         NSLayoutConstraint.activate([
-            //            cardExpiry.leadingAnchor.constraint(equalTo: cardImage.leadingAnchor, constant: 56),
             cardExpiry.trailingAnchor.constraint(equalTo: cardImage.trailingAnchor, constant: -56),
             cardExpiry.centerYAnchor.constraint(equalTo: cardImage.centerYAnchor, constant: 56),
             cardExpiry.heightAnchor.constraint(equalToConstant: 24),

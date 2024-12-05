@@ -25,7 +25,7 @@ class TabBarController: UITabBarController {
         self.tabBar.layer.cornerRadius = 10
         self.tabBar.backgroundColor = .gray.withAlphaComponent(0.1)
     
-        let firstTab = CardController()
+        let firstTab = CardController(viewModel: .init())
         firstTab.view.backgroundColor = .clear
         firstTab.tabBarItem = UITabBarItem(title: "Home", image: UIImage(named: "homeTab")?.resize(to: CGSize(width: 25, height: 25)), tag: 0)
     

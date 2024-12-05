@@ -8,11 +8,18 @@
 import UIKit
 import RealmSwift
 
+protocol TransferDelegate: AnyObject {
+    func transferReloadCollection()
+}
+
 class TransferController: BaseViewController {
     
     private let viewModel = TransferViewModel()
     var selectedFromCard: CardModel?
     var selectedToCard: CardModel?
+    
+    weak var delegate: TransferDelegate?
+
     
     init() {
         super.init(nibName: nil, bundle: nil)
@@ -24,7 +31,7 @@ class TransferController: BaseViewController {
     }
     
     func fetchCardList() {
-        viewModel.fetchCardList() // Call the ViewModel to fetch cards
+        viewModel.fetchCardList()
     }
     
     private lazy var greenView: UILabel = {
@@ -141,14 +148,12 @@ class TransferController: BaseViewController {
     }
     
     @objc func transferAction() {
-        // Validate transfer amount through the ViewModel
         guard let amountText = transferAmount.text,
               viewModel.validateTransferAmount(amountText: amountText, selectedFromCard: selectedFromCard) else {
             showAlert(message: "Please enter a valid transfer amount.")
             return
         }
         
-        // Execute transfer using the ViewModel
         guard let fromCard = selectedFromCard, let toCard = selectedToCard else {
             showAlert(message: "Please select both source and destination cards.")
             return
@@ -162,7 +167,7 @@ class TransferController: BaseViewController {
                 return
             }
             viewModel.executeTransfer(fromCard: fromCard, toCard: toCard, amount: amount)
-            
+            delegate?.transferReloadCollection()
             navigationController?.popViewController(animated: true)
             showAlert(message: "Transfer successful!")
             

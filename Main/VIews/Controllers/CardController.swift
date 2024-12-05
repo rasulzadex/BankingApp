@@ -7,13 +7,13 @@
 
 import UIKit
 
-class CardController: BaseViewController {
+final class CardController: BaseViewController, CardControllerDelegate {
     
-    var viewModel: CardViewModel
+    let viewModel: CardViewModel
     var selectedIndex: Int?
   
-    init() {
-        self.viewModel = CardViewModel()
+    init(viewModel: CardViewModel) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
         viewModel.fetchCardList()
     }
@@ -97,13 +97,15 @@ class CardController: BaseViewController {
         cardCollection.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
     }
     @objc func addCardFunction(){
-        navigationController?.pushViewController(AddCardController(viewModel: AddCardViewModel()), animated: true)
-        navigationController?.navigationBar.tintColor = .appGreen
+        let addCardVC = AddCardController(viewModel: AddCardViewModel())
+           addCardVC.delegate = self  // Set the delegate to CardController
+           navigationController?.pushViewController(addCardVC, animated: true)
+           navigationController?.navigationBar.tintColor = .appGreen
         
     }
     @objc func tranferFunction(){
         if viewModel.cardList?.count ?? 1 < 2 {
-            showAlert(message: "You need to have at least 2 cards")
+            viewModel.cardVMlistener?(.error("You need to have at least 2 cards"))
         } else {
             navigationController?.pushViewController(TransferController(), animated: true)
             navigationController?.navigationBar.tintColor = .white
@@ -116,8 +118,9 @@ class CardController: BaseViewController {
                cardCollection.reloadData()
                 pageControl.numberOfPages = viewModel.cardList?.count ?? 0
                 pageControl.currentPage = selectedIndex ?? 0
+            
            } else {
-               showAlert(message: "You need to have at least 1 card")
+               viewModel.cardVMlistener?(.error("You need to have at least 1 card"))
            }
     }
     
@@ -127,18 +130,40 @@ class CardController: BaseViewController {
         
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        viewModel.fetchCardList()
-        cardCollection.reloadData()
-        pageControl.numberOfPages = viewModel.cardList?.count ?? 0
-        
-    }
     
     override func configureView() {
         super.configureView()
         view.addViews(view: [cardCollection, plusImage, transferIcon, trashIcon, pageControl])
+        configureViewModel()
     }
+    
+    
+    fileprivate func configureViewModel() {
+        viewModel.cardVMlistener = { [weak self] state in
+            guard let self else {return}
+            switch state {
+            case .success:
+                print(#function, "Success")
+            case .error(let message):
+                showAlert(message: message)
+            }
+            
+        }
+        
+    }
+    
+    func didAddCard() {
+            viewModel.fetchCardList()
+            cardCollection.reloadData()
+            pageControl.numberOfPages = viewModel.cardList?.count ?? 0
+        }
+    
+    func tranferReloadCollection() {
+            viewModel.fetchCardList()
+            cardCollection.reloadData()
+            pageControl.numberOfPages = viewModel.cardList?.count ?? 0
+        }
+    
     
     override func configureConstraint() {
         super.configureConstraint()
@@ -179,16 +204,14 @@ extension CardController: UICollectionViewDelegate, UICollectionViewDataSource, 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         viewModel.cardList?.count ?? 0
     }
-    
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CardCell", for: indexPath) as! CardCell
         selectedIndex = indexPath.row
         viewModel.fetchCardList()
         let card = viewModel.cardList?[indexPath.row]
-        cell.cardName.text = card?.cardName
-        cell.cardNumber.text = " **** " + (card?.cardNumber.suffix(4) ?? "****")
-        cell.cardExp.text = card?.cardExpiration
-        cell.balanceLabel.text = "₼" + (card?.cardBalance ?? "0")
+        if let card = card {
+            cell.configureCell(object: card)
+        }
         return cell
         
     }

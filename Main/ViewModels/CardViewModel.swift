@@ -8,9 +8,18 @@
 import RealmSwift
 
 class CardViewModel {
+    
+    enum ViewState {
+        case success
+        case error(String)
+    }
+    
+    
     private let realm = try? Realm()
     var cardList: Results<CardModel>?
     
+    var cardVMlistener: ((ViewState) -> Void)?
+
     
     func fetchCardList() {
             self.cardList = realm?.objects(CardModel.self)
@@ -24,7 +33,7 @@ class CardViewModel {
                     realm?.delete(card)
                 }
             } catch {
-                print("Error deleting card: \(error)")
+                cardVMlistener?(.error("Error deleting card: \(error)"))
             }
         }
     

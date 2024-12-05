@@ -69,6 +69,11 @@ class CardTableCell: UITableViewCell {
         contentView.addViews(view: [cardNumber, greenView, cardType, cardBalance])
     }
     
+    func configureTableCell(data: CardModel) {
+        cardBalance.text = data.cardBalance
+        cardNumber.text = data.cardNumber
+        }
+    
     private func configureConstraints() {
         NSLayoutConstraint.activate([
             greenView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),

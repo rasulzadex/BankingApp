@@ -55,6 +55,14 @@ class CardCell: UICollectionViewCell {
         addViews(view: [cardImage, cardNumber, cardExp, cardName,cardType, balanceLabel])
     }
     
+    func configureCell(object: CardModel) {
+        cardExp.text = object.cardExpiration
+        cardName.text = object.cardName
+        cardNumber.text = "**** " + object.cardNumber.suffix(4)
+        balanceLabel.text = object.cardBalance
+    }
+    
+    
     private func configureConstraints() {
         NSLayoutConstraint.activate([
             cardImage.centerXAnchor.constraint(equalTo: centerXAnchor),

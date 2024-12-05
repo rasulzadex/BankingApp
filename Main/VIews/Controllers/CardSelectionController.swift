@@ -7,11 +7,12 @@
 
 import UIKit
 
+
 final class CardSelectionController: BaseViewController {
     
     var selectedIndex: Int?
         var viewModel: CardSelectionViewModel
-        
+
         var sendCardinfo: ((CardModel) -> Void)?
         
         init(viewModel: CardSelectionViewModel) {
@@ -77,11 +78,10 @@ extension CardSelectionController: UITableViewDelegate, UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CardTableCell", for: indexPath) as! CardTableCell
         selectedIndex = indexPath.row
         fetchCustomerList()
-        
         let card = viewModel.cardList?[indexPath.row]
-        cell.cardNumber.text = card?.cardNumber
-        cell.cardBalance.text = (card?.cardBalance ?? "0") + " AZN"
-        
+        if let card = card {
+            cell.configureTableCell(data: card)
+        }
         return cell
     }
 
@@ -92,7 +92,7 @@ extension CardSelectionController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let card = viewModel.cardList?[indexPath.row] else { return }
         sendCardinfo?(card)
-        dismiss(animated: true)   
+        dismiss(animated: true)
     }
     
 }
