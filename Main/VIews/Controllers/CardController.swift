@@ -8,7 +8,7 @@
 import UIKit
 
 final class CardController: BaseViewController, CardControllerDelegate {
-    
+ 
     let viewModel: CardViewModel
     var selectedIndex: Int?
   
@@ -96,28 +96,33 @@ final class CardController: BaseViewController, CardControllerDelegate {
         let indexPath = IndexPath(item: currentPage, section: 0)
         cardCollection.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
     }
-    @objc func addCardFunction(){
+    @objc private func addCardFunction(){
         let addCardVC = AddCardController(viewModel: AddCardViewModel())
-           addCardVC.delegate = self  // Set the delegate to CardController
+           addCardVC.delegate = self
            navigationController?.pushViewController(addCardVC, animated: true)
            navigationController?.navigationBar.tintColor = .appGreen
         
     }
-    @objc func tranferFunction(){
+    @objc private func tranferFunction(){
         if viewModel.cardList?.count ?? 1 < 2 {
             viewModel.cardVMlistener?(.error("You need to have at least 2 cards"))
         } else {
-            navigationController?.pushViewController(TransferController(), animated: true)
+            let transferVC = TransferController(viewModel: .init())
+               transferVC.transferdelegate = self
+            navigationController?.pushViewController(transferVC, animated: true)
             navigationController?.navigationBar.tintColor = .white
+            viewModel.cardVMlistener?(.success("Success"))
+
         }
     }
-    @objc func deleteCardFunction() {
+    @objc private func deleteCardFunction() {
         if viewModel.cardList?.count ?? 1 > 1, let index = selectedIndex {
                viewModel.deleteCard(at: index)
                viewModel.fetchCardList()
                cardCollection.reloadData()
                 pageControl.numberOfPages = viewModel.cardList?.count ?? 0
                 pageControl.currentPage = selectedIndex ?? 0
+                viewModel.cardVMlistener?(.success("Card Deleted successfully"))
             
            } else {
                viewModel.cardVMlistener?(.error("You need to have at least 1 card"))
@@ -142,8 +147,8 @@ final class CardController: BaseViewController, CardControllerDelegate {
         viewModel.cardVMlistener = { [weak self] state in
             guard let self else {return}
             switch state {
-            case .success:
-                print(#function, "Success")
+            case .success(let message):
+                print(message)
             case .error(let message):
                 showAlert(message: message)
             }
@@ -156,14 +161,7 @@ final class CardController: BaseViewController, CardControllerDelegate {
             viewModel.fetchCardList()
             cardCollection.reloadData()
             pageControl.numberOfPages = viewModel.cardList?.count ?? 0
-        }
-    
-    func tranferReloadCollection() {
-            viewModel.fetchCardList()
-            cardCollection.reloadData()
-            pageControl.numberOfPages = viewModel.cardList?.count ?? 0
-        }
-    
+        }    
     
     override func configureConstraint() {
         super.configureConstraint()
@@ -200,18 +198,18 @@ final class CardController: BaseViewController, CardControllerDelegate {
     }
 }
 
-extension CardController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout{
+extension CardController: UICollectionViewDelegate,
+                          UICollectionViewDataSource,
+                          UICollectionViewDelegateFlowLayout{
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         viewModel.cardList?.count ?? 0
     }
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let card = viewModel.cardList?[indexPath.row] else {return UICollectionViewCell()}
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CardCell", for: indexPath) as! CardCell
         selectedIndex = indexPath.row
-        viewModel.fetchCardList()
-        let card = viewModel.cardList?[indexPath.row]
-        if let card = card {
-            cell.configureCell(object: card)
-        }
+        cell.configureCell(object: card)
         return cell
         
     }

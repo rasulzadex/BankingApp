@@ -9,9 +9,16 @@ import Foundation
 import RealmSwift
 final class RegisterViewModel {
     
+    enum ViewState {
+        case success(String)
+        case error(String)
+        
+    }
+    
     private var customerList: Results<Customer>?
     private let realm = try? Realm()
     
+    var registerListener: ((ViewState)->Void)?
     
     private var checker: [ValidationType: Bool] = [
             .email: false,
@@ -35,10 +42,6 @@ final class RegisterViewModel {
            self.customerList = realm?.objects(Customer.self)
        }
     
-    
-    
-    
-    
     func saveCustomer(name: String, lastName: String, customerID: String, email: String, phoneNumber: String, password: String) {
             let customer = Customer()
             customer.name = name
@@ -52,8 +55,9 @@ final class RegisterViewModel {
                 try realm?.write {
                     realm?.add(customer)
                 }
+                registerListener?(.success("Customer has been added"))
             } catch {
-                print("Error saving customer: \(error.localizedDescription)")
+                registerListener?(.error("Error saving customer: \(error.localizedDescription)"))
             }
         }
     

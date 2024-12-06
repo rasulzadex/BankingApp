@@ -7,9 +7,16 @@
 import RealmSwift
 
 class TransferViewModel {
+    
+    enum ViewState {
+        case success(String)
+        case error(String)
+    }
+    
     private let realm = try? Realm()
     
     var cardList: Results<CardModel>?
+    var listener: ((ViewState) -> Void)?
 
     func fetchCardList() {
         self.cardList = realm?.objects(CardModel.self)
@@ -40,6 +47,7 @@ class TransferViewModel {
             try realm?.write {
                 guard var fromCardBalance = Double(fromCard.cardBalance),
                       var toCardBalance = Double(toCard.cardBalance) else {
+                    listener?(.error("Error processing card balances"))
                     return
                 }
 
@@ -51,9 +59,12 @@ class TransferViewModel {
 
                 realm?.add(fromCard, update: .modified)
                 realm?.add(toCard, update: .modified)
+               listener?(.success("Transfer handled successfully"))
             }
         } catch {
             print("An error occurred while processing the transfer.")
+            listener?(.error("An error occurred while processing the transfer"))
         }
     }
+
 }

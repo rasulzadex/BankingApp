@@ -223,9 +223,10 @@ extension UIView {
 
 extension UIViewController {
     func showAlert(message: String) {
-        let alert = UIAlertController(title: "ALERT", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        self.present(alert, animated: true, completion: nil)
+        let alertController = UIAlertController(title: "Alert", message: message, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        self.present(alertController, animated: true, completion: nil)
     }
+
 }
 

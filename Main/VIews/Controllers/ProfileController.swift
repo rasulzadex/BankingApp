@@ -71,7 +71,7 @@ class ProfileController: BaseViewController {
     }
     
     
-    func logoutAlert(message: String) {
+   private func logoutAlert(message: String) {
         let alert = UIAlertController(title: "Are you logging out?", message: message, preferredStyle: .alert)
         
         let yesAction = UIAlertAction(title: "Log out", style: .default) { _ in

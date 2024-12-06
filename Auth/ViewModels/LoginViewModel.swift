@@ -3,10 +3,15 @@ import RealmSwift
 
 final class LoginViewModel {
     
+    enum ViewState {
+        case error(String)
+        case success(String)
+    }
+    
     private let realm = try? Realm()
     var customerList: Results<Customer>?
     
-
+    var loginListener: ((ViewState) -> Void)?
     
     lazy var numberCheck = false
     lazy var passCheck = false
@@ -19,18 +24,13 @@ final class LoginViewModel {
         self.customerList = realm?.objects(Customer.self)
     
     }
-    
-    
-    
+
     func performLogin(phoneNumber: String, password: String) {
-        
         
         guard let customers = customerList else {
             numberCheck = false
-           print( "Failed to fetch customers.")
             return
         }
-
         for customer in customers {
             if phoneNumber == customer.phoneNumber {
                 numberCheck = true
@@ -42,7 +42,6 @@ final class LoginViewModel {
                 return
             }
         }
-
         numberCheck = false
     }
 }

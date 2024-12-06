@@ -10,10 +10,16 @@ import RealmSwift
 
 final class CardSelectionViewModel {
     
+    enum ViewState {
+        case success(String)
+        case error(String)
+    }
+
+    var listener: ((ViewState) -> Void)?
+    
     private let realm = try? Realm()
     var cardList: Results<CardModel>?
     
-    var reloadCallback: (() -> Void)?
     
     init() {
         fetchCustomerList()
@@ -21,6 +27,7 @@ final class CardSelectionViewModel {
     
     func fetchCustomerList() {
         self.cardList = realm?.objects(CardModel.self)
+        cardList?.count ?? 0 > 1 ? listener?(.success("You can select a card")) : listener?(.error("You dont have enough card"))
     }
 
     

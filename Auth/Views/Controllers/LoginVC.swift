@@ -9,7 +9,7 @@ import RealmSwift
 
 
 
-class LoginVC: UIViewController {
+final class LoginVC: UIViewController {
 
     
     private lazy var scrollView: UIScrollView = {
@@ -180,7 +180,6 @@ class LoginVC: UIViewController {
         l.textColor = .appGreen
         l.translatesAutoresizingMaskIntoConstraints = false
 
-
         return l
         
         
@@ -206,18 +205,17 @@ class LoginVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-        
         addSubviews()
         confConstraints()
         UserDefaultsHelper.setInteger(key: UserDefaultsKey.loginType.rawValue, value: 1)
 
     }
     
-    @objc
-    func loginButtonClick() {
+    @objc private func loginButtonClick() {
         guard let phoneNumber = phoneNumberTextF.text, !phoneNumber.isEmpty,
               let password = passwordTextF.text, !password.isEmpty else {
-            showAlert(on: self, message: "Please fill inputs correctly")
+            viewModel.loginListener?(.error("Please fill the fields correctly"))
+
             return
         }
         
@@ -226,9 +224,9 @@ class LoginVC: UIViewController {
 
         
         if !viewModel.numberCheck {
-            showAlert(message: "incorrect number")
+            viewModel.loginListener?(.error("Wrong number"))
         } else if !viewModel.passCheck{
-            showAlert(message: "incorrect pass")
+            viewModel.loginListener?(.error("Wrong Password"))
         } else if viewModel.passCheck {
             
           if let customer = viewModel.customerList?.first(where: { $0.phoneNumber == phoneNumber }) {
@@ -238,6 +236,7 @@ class LoginVC: UIViewController {
               UserDefaults.standard.set(customer.emailAddress, forKey: "email")
         }
             activityIndicator.startAnimating()
+            viewModel.loginListener?(.success("Login action success"))
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                 self.showCard()
                 self.activityIndicator.stopAnimating()
@@ -252,16 +251,19 @@ class LoginVC: UIViewController {
         }
     }
     
+    private func configureViewModel() {
+        viewModel.loginListener = {[weak self] state in
+            guard let self else {return}
+            switch state {
+            case .error(let message):
+                showAlert(message: message)
+            case .success(let message):
+                print(message)
+            }
+        }
+    }
     
-     func showAlert(on viewController: UIViewController, message: String) {
-         let alert = UIAlertController(title: "ERROR", message: message, preferredStyle: .alert)
-         let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
-         alert.addAction(okAction)
-         viewController.present(alert, animated: true, completion: nil)
-     }
-    
-    
-    @objc
+    @objc private
         func registerButtonClick() {
             let navController = RegisterVC(viewModel: RegisterViewModel())
             navigationController?.pushViewController(navController, animated: true)
@@ -272,7 +274,7 @@ class LoginVC: UIViewController {
         view.addViews(view: [ bubbleBG, logoGreen, scrollView, activityIndicator])
         scrollView.addSubview(containerView)
         containerView.addViews(view: [phoneNumberTextF,passwordTextF, loginButton, signupButton, phoneLabel, passwordLabel, dontHaveAccountLabel, closedEyeImage])
-
+        configureViewModel()
     }
     
 

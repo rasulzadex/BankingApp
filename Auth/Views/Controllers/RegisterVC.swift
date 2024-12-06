@@ -8,7 +8,7 @@
 import UIKit
 import RealmSwift
 
-class RegisterVC: UIViewController {
+final class RegisterVC: UIViewController {
     
     private lazy var scrollView: UIScrollView = {
         let sv = UIScrollView()
@@ -22,50 +22,24 @@ class RegisterVC: UIViewController {
         return vw
     }()
     
-    private lazy var firstNameLabel: UILabel = {
-        
-        let l = UILabel()
-        l.text = "Firstname"
-        l.textAlignment = .left
-        l.numberOfLines = 0
+    private lazy var firstNameLabel: ReusableLabel = {
+        let l = ReusableLabel(text: "Firstname", textAlignment: .left, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 0, cornerRadius: 10)
         l.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        l.textColor = .appGreen
-        l.translatesAutoresizingMaskIntoConstraints = false
         return l
-        
-        
     }()
-    
-    private lazy var firstNameTF: UITextField = {
-        
-        let tf = UITextField()
-        tf.layer.cornerRadius = 10
-        tf.layer.borderWidth = 1
-        tf.setPlaceholder(text: "John", color: .appGreen, alpha: 0.3)
-        tf.layer.borderColor = UIColor.appGreen.withAlphaComponent(0.5).cgColor
-        tf.textColor = .black
+
+    private lazy var firstNameTF: ReusableTextField = {
+        let tf = ReusableTextField(placeholder: "John", placeholderColor: .appGreen, borderColor: .appGreen.withAlphaComponent(0.5), texttColor: .appGreen, bgColor: .white.withAlphaComponent(0.5))
         tf.delegate = self
-        tf.translatesAutoresizingMaskIntoConstraints = false
-        tf.setLeftPadding(10)
-        tf.textColor = .appGreen
-        tf.backgroundColor = .white.withAlphaComponent(0.5)
         return tf
-        
     }()
-    
-    private lazy var lastNameLabel: UILabel = {
-        
-        let l = UILabel()
-        l.text = "Lastname"
-        l.textAlignment = .left
-        l.numberOfLines = 0
+  
+    private lazy var lastNameLabel: ReusableLabel = {
+        let l = ReusableLabel(text: "Lastname", textAlignment: .left, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 0, cornerRadius: 10)
         l.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        l.textColor = .appGreen
-        l.translatesAutoresizingMaskIntoConstraints = false
         return l
-        
     }()
-    
+ 
     private lazy var welcomeLabel: UILabel = {
         let l = UILabel()
         l.text = "Enter details to create manat bank account"
@@ -77,145 +51,60 @@ class RegisterVC: UIViewController {
         return l
         
     }()
-    
-    private lazy var lastNameTF: UITextField = {
-        let tf = UITextField()
-        tf.layer.cornerRadius = 10
-        tf.layer.borderWidth = 1
-        tf.setPlaceholder(text: "Doe", color: .appGreen, alpha: 0.3)
-        tf.layer.borderColor = UIColor.appGreen.withAlphaComponent(0.5).cgColor
-        tf.textColor = .black
+    private lazy var lastNameTF: ReusableTextField = {
+        let tf = ReusableTextField(placeholder: "Doe", placeholderColor: .appGreen, borderColor: .appGreen.withAlphaComponent(0.5), texttColor: .appGreen, bgColor: .white.withAlphaComponent(0.5))
         tf.delegate = self
-        tf.translatesAutoresizingMaskIntoConstraints = false
-        tf.setLeftPadding(10)
-        tf.textColor = .appGreen
-        tf.backgroundColor = .white.withAlphaComponent(0.5)
         return tf
     }()
-    
-    private lazy var finLabel: UILabel = {
-        let l = UILabel()
-        l.text = "FIN Code"
-        l.textAlignment = .left
-        l.numberOfLines = 0
+
+    private lazy var finLabel: ReusableLabel = {
+        let l = ReusableLabel(text: "FIN Code", textAlignment: .left, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 0, cornerRadius: 10)
         l.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        l.textColor = .appGreen
-        l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
     
-    private lazy var finCodeTF: UITextField = {
-        let tf = UITextField()
-        tf.layer.cornerRadius = 10
-        tf.layer.borderWidth = 1
-        tf.setPlaceholder(text: "XXXXXXX", color: .appGreen, alpha: 0.3)
-        tf.layer.borderColor = UIColor.appGreen.withAlphaComponent(0.5).cgColor
+    private lazy var finCodeTF: ReusableTextField = {
+        let tf = ReusableTextField(placeholder: "XXXXXXX", placeholderColor: .appGreen, borderColor: .appGreen.withAlphaComponent(0.5), texttColor: .appGreen, bgColor: .white.withAlphaComponent(0.5))
         tf.delegate = self
-        tf.translatesAutoresizingMaskIntoConstraints = false
-        tf.setLeftPadding(10)
-        tf.textColor = .appGreen
-        tf.backgroundColor = .white.withAlphaComponent(0.5)
-        tf.autocapitalizationType = .allCharacters
         return tf
     }()
-    
-    private lazy var emailLabel: UILabel = {
-        let l = UILabel()
-        l.text = "Email"
-        l.textAlignment = .left
-        l.numberOfLines = 0
+
+    private lazy var emailLabel: ReusableLabel = {
+        let l = ReusableLabel(text: "Email", textAlignment: .left, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 0, cornerRadius: 10)
         l.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        l.textColor = .appGreen
-        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
+    }()
+   
+    private lazy var emailTF: ReusableTextField = {
+        let tf = ReusableTextField(placeholder: "hello@example.com", placeholderColor: .appGreen, borderColor: .appGreen.withAlphaComponent(0.5), texttColor: .appGreen, bgColor: .white.withAlphaComponent(0.5))
+        tf.delegate = self
+        return tf
+    }()
+  
+    private lazy var phoneLabel: ReusableLabel = {
+        let l = ReusableLabel(text: "Phone", textAlignment: .left, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 0, cornerRadius: 10)
+        l.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         return l
     }()
     
-    private lazy var emailTF: UITextField = {
-        let tf = UITextField()
-        tf.layer.cornerRadius = 10
-        tf.layer.borderWidth = 1
-        tf.setPlaceholder(text: "hello@example.com", color: .appGreen, alpha: 0.3)
-        tf.layer.borderColor = UIColor.appGreen.withAlphaComponent(0.5).cgColor
+    private lazy var phoneNumberTF: ReusableTextField = {
+        let tf = ReusableTextField(placeholder: "994XXXXXXXXX", placeholderColor: .appGreen, borderColor: .appGreen.withAlphaComponent(0.5), texttColor: .appGreen, bgColor: .white.withAlphaComponent(0.5))
         tf.delegate = self
-        tf.translatesAutoresizingMaskIntoConstraints = false
-        tf.keyboardType = .emailAddress
-        tf.backgroundColor = .white.withAlphaComponent(0.5)
-        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: tf.frame.height))
-        tf.leftView = paddingView
-        tf.leftViewMode = .always
-        tf.textColor = .appGreen
-      
         return tf
-        
-        
     }()
-    private lazy var phoneLabel: UILabel = {
-        
-        let l = UILabel()
-        l.text = "Phone"
-        l.textAlignment = .left
-        l.numberOfLines = 0
-        
+   
+    private lazy var passwordLabel: ReusableLabel = {
+        let l = ReusableLabel(text: "Password", textAlignment: .left, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 0, cornerRadius: 10)
         l.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        l.textColor = .appGreen
-        l.translatesAutoresizingMaskIntoConstraints = false
         return l
-        
-        
     }()
-    private lazy var phoneNumberTF: UITextField = {
-        
-        let tf = UITextField()
-        tf.layer.cornerRadius = 10
-        tf.layer.borderWidth = 1
-        tf.setPlaceholder(text: "994XXXXXXXXX", color: .appGreen, alpha: 0.3)
-        tf.layer.borderColor = UIColor.appGreen.withAlphaComponent(0.5).cgColor
+  
+    private lazy var passwordTF: ReusableTextField = {
+        let tf = ReusableTextField(placeholder: "********", placeholderColor: .appGreen, borderColor: .appGreen.withAlphaComponent(0.5), texttColor: .appGreen, bgColor: .white.withAlphaComponent(0.5))
         tf.delegate = self
-        tf.translatesAutoresizingMaskIntoConstraints = false
-        tf.keyboardType = .numberPad
-        tf.setLeftPadding(10)
-        tf.textColor = .appGreen
-        tf.backgroundColor = .white.withAlphaComponent(0.5)
-        
-        
         return tf
-        
-        
     }()
-    
-    
-    private lazy var passwordLabel: UILabel = {
-        
-        let l = UILabel()
-        l.text = "Password"
-        l.textAlignment = .left
-        l.numberOfLines = 0
-        l.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        l.textColor = .appGreen
-        l.translatesAutoresizingMaskIntoConstraints = false
-        return l
-        
-        
-    }()
-    
-    private lazy var passwordTF: UITextField = {
-        
-        let tf = UITextField()
-        tf.layer.cornerRadius = 10
-        tf.layer.borderWidth = 1
-        tf.setPlaceholder(text: "********", color: .appGreen, alpha: 0.3)
-        tf.layer.borderColor = UIColor.appGreen.withAlphaComponent(0.5).cgColor
-        tf.delegate = self
-        tf.translatesAutoresizingMaskIntoConstraints = false
-        tf.isSecureTextEntry = true
-        tf.textColor = .appGreen
-        tf.backgroundColor = .white.withAlphaComponent(0.5)
-        tf.setLeftPadding(10)
-        return tf
-        
-        
-    }()
-    
+   
     
     
     
@@ -318,8 +207,8 @@ class RegisterVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-        let realm = try! Realm()
-        print("Realm path", realm.configuration.fileURL!)
+//        let realm = try! Realm()
+//        print("Realm path", realm.configuration.fileURL!)
         viewModel.fetchCustomerList()
         configureView()
         configureConstraints()
@@ -337,21 +226,14 @@ class RegisterVC: UIViewController {
         ]
         
     }
-    
-    fileprivate func saveUserToDefault(user: Customer?) {
-        UserDefaults.standard.setValue(user?.name, forKey: "username")
-        UserDefaults.standard.setValue(user?.emailAddress, forKey: "email")
-    }
+
     
     fileprivate func configureView(){
         view.addSubview(imageView)
         view.addSubview(scrollView)
         scrollView.addSubview(containerView)
-        [   createAccountLabel, welcomeLabel, firstNameTF, firstNameLabel, lastNameTF, lastNameLabel, finLabel, finCodeTF, emailTF, emailLabel, phoneNumberTF, phoneLabel, passwordTF, passwordLabel, actionButton, loginButton, alreadyAccLabel, closedEyeImage ].forEach{
-            containerView.addSubview(
-                $0
-            )
-        }
+        containerView.addViews(view: [createAccountLabel, welcomeLabel, firstNameTF, firstNameLabel, lastNameTF, lastNameLabel, finLabel, finCodeTF, emailTF, emailLabel, phoneNumberTF, phoneLabel, passwordTF, passwordLabel, actionButton, loginButton, alreadyAccLabel, closedEyeImage])
+        configureViewModel()
         
     }
     
@@ -502,25 +384,24 @@ class RegisterVC: UIViewController {
                   let pass = passwordTF.text else {return}
             
             viewModel.saveCustomer(name: name, lastName: lastname, customerID: fin, email: email, phoneNumber: phone, password: pass)
-            
+            viewModel.registerListener?(.success("New customer is created here"))
             navigationController?.popViewController(animated: true)
         } else {
-            showAlert(on: self)
+            viewModel.registerListener?(.error("Couldn't create customer"))
         }
     }
-    
-    func showAlert(on viewController: UIViewController) {
-        let  alert = UIAlertController(title: "ERROR",
-                                       message: "Please check your inputs and try again.",
-                                       preferredStyle: .alert)
-        let okAction = UIAlertAction(title: "OK", style: .default) { _ in
+
+    private func configureViewModel() {
+        viewModel.registerListener = {[weak self] state in
+            guard let self else {return}
+            switch state {
+            case .success(let message):
+                print(message)
+            case .error(let message):
+                showAlert(message: message)
+            }
         }
-        alert.addAction(okAction)
-        
-        viewController.present(alert, animated: true, completion: nil)
     }
-    
-    
     
     @objc func loginButtonClick() {
         navigationController?.popViewController(animated: true)

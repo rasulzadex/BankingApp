@@ -8,20 +8,18 @@
 import UIKit
 import RealmSwift
 
-protocol TransferDelegate: AnyObject {
-    func transferReloadCollection()
-}
+final class TransferController: BaseViewController {
 
-class TransferController: BaseViewController {
+    private let viewModel: TransferViewModel
+    private var selectedFromCard: CardModel?
+    private var selectedToCard: CardModel?
     
-    private let viewModel = TransferViewModel()
-    var selectedFromCard: CardModel?
-    var selectedToCard: CardModel?
     
-    weak var delegate: TransferDelegate?
+    weak var transferdelegate: CardControllerDelegate?
 
     
-    init() {
+    init(viewModel: TransferViewModel) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
         fetchCardList()
     }
@@ -30,7 +28,7 @@ class TransferController: BaseViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func fetchCardList() {
+    private func fetchCardList() {
         viewModel.fetchCardList()
     }
     
@@ -41,14 +39,12 @@ class TransferController: BaseViewController {
         return l
         
     }()
-    
     private lazy var fromCard: ReusableLabel = {
         let l = ReusableLabel(text: "Select a card transfer from", textAlignment: .left, fontName: "", fontSize: 14, textColor: .white, numberOfLines: 0, cornerRadius: 10)
         l.backgroundColor = .clear
         l.isUserInteractionEnabled = true
         return l
     }()
-    
     private lazy var toCard: ReusableLabel = {
         let l = ReusableLabel(text: "Select a card to transfer", textAlignment: .left, fontName: "", fontSize: 14, textColor: .white, numberOfLines: 0, cornerRadius: 10)
         l.backgroundColor = .clear
@@ -56,24 +52,20 @@ class TransferController: BaseViewController {
         return l
         
     }()
-    
     private lazy var cardType: ReusableImageView = {
         let i = ReusableImageView(imageName: " ", contentMode: .scaleAspectFill)
         return i
     }()
-    
     private lazy var cardTypeTo: ReusableImageView = {
         let i = ReusableImageView(imageName: " ", contentMode: .scaleAspectFill)
         return i
     }()
-    
     private lazy var transferAmount: ReusableTextField = {
         let t = ReusableTextField(placeholder: "Transfer amount", placeholderColor: .appGreen, borderColor: .white, texttColor: .appGreen, bgColor: .white.withAlphaComponent(0.7))
         t.delegate = self
         t.textAlignment = .center
         return t
     }()
-    
     private lazy var fromLabel: ReusableLabel = {
         let l = ReusableLabel(text: "Click to select", textAlignment: .center, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 0, cornerRadius: 10)
         
@@ -83,7 +75,6 @@ class TransferController: BaseViewController {
         l.addGestureRecognizer(tapGesture)
         return l
     }()
-    
     private lazy var fromView: UIView = {
         let v = UIView()
         v.translatesAutoresizingMaskIntoConstraints = false
@@ -91,7 +82,6 @@ class TransferController: BaseViewController {
         v.layer.cornerRadius = 10
         return v
     }()
-    
     private lazy var toView: UIView = {
         let v = UIView()
         v.translatesAutoresizingMaskIntoConstraints = false
@@ -100,7 +90,6 @@ class TransferController: BaseViewController {
         return v
         
     }()
-    
     private lazy var toLabel: ReusableLabel = {
         let l = ReusableLabel(text: "Click to select", textAlignment: .center, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 0, cornerRadius:  10)
         l.isUserInteractionEnabled = true
@@ -108,35 +97,30 @@ class TransferController: BaseViewController {
         l.addGestureRecognizer(tapGesture)
         return l
     }()
-    
     private lazy var currencyLabel: ReusableLabel = {
-        let l = ReusableLabel(text: "AZN", textAlignment: .center, fontName: "", fontSize: 14, textColor: .appGreen, numberOfLines: 0, cornerRadius: 10)
-        l.backgroundColor  = .white.withAlphaComponent(0.7)
-        l.layer.borderColor = UIColor.white.withAlphaComponent(0.7).cgColor
-        l.layer.borderWidth = 1
-        return l
-    }()
-    
-    
+    let l = ReusableLabel(text: "AZN", textAlignment: .center, fontName: "", fontSize: 14, textColor: .appGreen, numberOfLines: 0, cornerRadius: 10)
+    l.backgroundColor  = .white.withAlphaComponent(0.7)
+    l.layer.borderColor = UIColor.white.withAlphaComponent(0.7).cgColor
+    l.layer.borderWidth = 1
+    return l
+}()
     private lazy var transferButton: ReusableButton = {
         let b = ReusableButton(title: "Transfer", buttonColor: .appYellow) {
             [weak self] in self?.transferAction()
         }
         return b
     }()
-    
     private lazy var fromBalance: ReusableLabel = {
         let l = ReusableLabel(text: "", textAlignment: .left, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 1, cornerRadius: 0)
         l.font = UIFont.systemFont(ofSize: 16)
         return l
     }()
-    
     private lazy var toBalance: ReusableLabel = {
         let l = ReusableLabel(text: "", textAlignment: .left, fontName: "", fontSize: 12, textColor: .appGreen, numberOfLines: 1, cornerRadius: 0)
         l.font = UIFont.systemFont(ofSize: 16)
         return l
     }()
-    
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -145,36 +129,42 @@ class TransferController: BaseViewController {
     override func configureView() {
         super.configureView()
         view.addViews(view: [greenView,  fromView, toView, cardType, cardTypeTo, fromCard, toCard, fromLabel, toLabel, transferAmount, currencyLabel, transferButton, fromBalance, toBalance ])
+        configureViewModel()
     }
     
-    @objc func transferAction() {
+    @objc private func transferAction() {
         guard let amountText = transferAmount.text,
               viewModel.validateTransferAmount(amountText: amountText, selectedFromCard: selectedFromCard) else {
-            showAlert(message: "Please enter a valid transfer amount.")
+            viewModel.listener?(.error("Please select correct amount"))
+            
             return
         }
         
         guard let fromCard = selectedFromCard, let toCard = selectedToCard else {
-            showAlert(message: "Please select both source and destination cards.")
+            viewModel.listener?(.error("Please select both source and destination cards."))
+
             return
         }
         
         if fromCard == toCard {
-            showAlert(message: "You cannot transfer between the same card.")
+            viewModel.listener?(.error("Cards cannot be same"))
+
         } else {
             guard let amountText = transferAmount.text, let amount = Double(amountText) else {
-                showAlert(message: "Please enter a valid transfer amount.")
+                viewModel.listener?(.error("Select valid transfer amount"))
+                
                 return
             }
             viewModel.executeTransfer(fromCard: fromCard, toCard: toCard, amount: amount)
-            delegate?.transferReloadCollection()
+            transferdelegate?.didAddCard()
             navigationController?.popViewController(animated: true)
+            viewModel.listener?(.success("Transfer handled successfully"))
             showAlert(message: "Transfer successful!")
             
         }
     }
     
-    func resetUI() {
+     private func resetUI() {
         fromLabel.text = "Click to select"
         toLabel.text = "Click to select"
         transferAmount.text = ""
@@ -184,7 +174,7 @@ class TransferController: BaseViewController {
         cardType.image = UIImage(named: " ")
     }
     
-    @objc func fromCardAction() {
+    @objc private func fromCardAction() {
         let vc = CardSelectionController(viewModel: CardSelectionViewModel())
         
         vc.sendCardinfo = { [weak self] card in
@@ -203,11 +193,11 @@ class TransferController: BaseViewController {
             sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = true
         }
         present(vc, animated: true)
-        cardType.image = UIImage(named: "master")
-        
+        viewModel.listener?(.success("Card has been selected"))
+
     }
     
-    @objc func toCardAction() {
+    @objc private func toCardAction() {
         let vc = CardSelectionController(viewModel: CardSelectionViewModel())
         
         vc.sendCardinfo = { [weak self] card in
@@ -224,11 +214,28 @@ class TransferController: BaseViewController {
             sheet.widthFollowsPreferredContentSizeWhenEdgeAttached = true
         }
         present(vc, animated: true)
-        cardTypeTo.image = UIImage(named: "master")
+        viewModel.listener?(.success("Card has been selected"))
         
     }
 
-    
+    private func configureViewModel() {
+        viewModel.listener = {[weak self] state in
+            guard let self = self else { return }
+            switch state {
+            case .success(let message):
+                DispatchQueue.main.async {
+                    print(message)
+                
+                }
+            case .error(let message):
+                DispatchQueue.main.async {
+                    self.showAlert(message: message)
+                }
+            }
+        }
+    }
+
+
     override func configureConstraint() {
         super.configureConstraint()
         NSLayoutConstraint.activate([

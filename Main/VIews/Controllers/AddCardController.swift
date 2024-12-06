@@ -12,7 +12,7 @@ protocol CardControllerDelegate: AnyObject {
 }
 
 
-class AddCardController: BaseViewController {
+final class AddCardController: BaseViewController {
     
     weak var delegate: CardControllerDelegate?
     
@@ -31,18 +31,15 @@ class AddCardController: BaseViewController {
     
     private var isVisa = false
     private var isMaster = false
-    
-    
+        
     private lazy var cardImage: ReusableImageView = {
         let i = ReusableImageView(imageName: "cardBG", contentMode: .scaleAspectFill, cornerRadius: 0)
         return i
     }()
-    
     private lazy var cardType: ReusableImageView = {
         let i = ReusableImageView(imageName: "type", contentMode: .scaleAspectFill, cornerRadius: 0)
         return i
     }()
-    
     private lazy var cardNumberTF: ReusableTextField = {
         let t = ReusableTextField(placeholder: "0000 0000 0000 0000", placeholderColor: .white, borderColor: .white, texttColor: .white, bgColor: .clear)
         t.setCardNumberFormatting()
@@ -51,8 +48,6 @@ class AddCardController: BaseViewController {
         t.delegate = self
         return t
     }()
-    
-    
     private lazy var cardExpiry: ReusableTextField = {
         let t = ReusableTextField(placeholder: "MM/YYYY", placeholderColor: .white, borderColor: .white, texttColor: .white, bgColor: .clear)
         t.setCardExpirationDateFormatting()
@@ -61,8 +56,6 @@ class AddCardController: BaseViewController {
         t.textAlignment = .center
         return t
     }()
-    
-    
     private lazy var cardCVV: ReusableTextField = {
         let t = ReusableTextField(placeholder: "CVV", placeholderColor: .white, borderColor: .white, texttColor: .white, bgColor: .clear)
         t.setCVVFormat()
@@ -71,23 +64,19 @@ class AddCardController: BaseViewController {
         t.textAlignment = .center
         return t
     }()
-    
     private lazy var cardName: ReusableTextField = {
         let t = ReusableTextField(placeholder: "CARDNAME", placeholderColor: .white, borderColor: .white, texttColor: .white, bgColor: .clear)
-        
         t.font = UIFont(name: "Downtown", size: 14)
         t.delegate = self
         t.textAlignment = .center
         return t
     }()
-    
     private lazy var balanceTF: ReusableTextField = {
         let tf = ReusableTextField(placeholder: "Add your balance", placeholderColor: .appGreen.withAlphaComponent(0.5), borderColor: .appGreen, texttColor: .appGreen, bgColor: .clear)
         tf.font = UIFont(name: "Downtown", size: 16)
         tf.delegate = self
         return tf
     }()
-    
     private lazy var addCardButton: ReusableButton = {
         let b = ReusableButton(title: "Add Card", buttonColor: .appGreen, onAction: {[weak self] in self?.addCardClick()})
         return b
@@ -110,9 +99,10 @@ class AddCardController: BaseViewController {
             viewModel.saveCard()
             delegate?.didAddCard()
             navigationController?.popViewController(animated: true)
+            viewModel.addCardListener?(.success("New car has been added"))
             
         } else {
-                showAlert(message: "Invalid card info")
+            viewModel.addCardListener?(.error("Please enter valid card info"))
         }
         
         
@@ -122,6 +112,19 @@ class AddCardController: BaseViewController {
     override func configureView() {
         super.configureView()
         view.addViews(view: [cardImage, cardNumberTF, cardName, cardExpiry, cardCVV, addCardButton, cardType, balanceTF])
+        configureViewModel()
+    }
+    
+    private func configureViewModel(){
+        viewModel.addCardListener = {[weak self] state in
+            guard let self else {return}
+            switch state {
+            case .error(let message):
+                self.showAlert(message: message)
+            case .success(let message):
+               print(message)
+            }
+        }
     }
     
     override func configureConstraint() {

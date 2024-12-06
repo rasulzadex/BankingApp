@@ -10,8 +10,8 @@ import UIKit
 
 final class CardSelectionController: BaseViewController {
     
-    var selectedIndex: Int?
-        var viewModel: CardSelectionViewModel
+      private var selectedIndex: Int?
+       private var viewModel: CardSelectionViewModel
 
         var sendCardinfo: ((CardModel) -> Void)?
         
@@ -24,7 +24,7 @@ final class CardSelectionController: BaseViewController {
             fatalError("init(coder:) has not been implemented")
         }
   
-    func fetchCustomerList() {
+    private func fetchCustomerList() {
         viewModel.fetchCustomerList()
     }
     
@@ -42,15 +42,28 @@ final class CardSelectionController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         fetchCustomerList()
-        viewModel.reloadCallback = { [weak self] in
-                   self?.cardSelectionTable.reloadData()
-               }
 
+
+    }
+    
+    
+    private func configureViewModel(){
+        viewModel.listener? = {[weak self] state in
+            guard let self else {return}
+            switch state {
+            case .success(let message):
+                print(message)
+            case .error(let message):
+                showAlert(message: message)
+            }
+        }
+        
     }
     
     override func configureView() {
         super.configureView()
         view.addViews(view: [cardSelectionTable])
+        configureViewModel()
     }
 
     override func configureConstraint() {
@@ -77,7 +90,6 @@ extension CardSelectionController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CardTableCell", for: indexPath) as! CardTableCell
         selectedIndex = indexPath.row
-        fetchCustomerList()
         let card = viewModel.cardList?[indexPath.row]
         if let card = card {
             cell.configureTableCell(data: card)
@@ -92,6 +104,7 @@ extension CardSelectionController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let card = viewModel.cardList?[indexPath.row] else { return }
         sendCardinfo?(card)
+        viewModel.listener?(.success("Card has been selected"))
         dismiss(animated: true)
     }
     

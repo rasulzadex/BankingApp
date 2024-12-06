@@ -6,9 +6,13 @@
 //
 import Foundation
 import RealmSwift
-import UIKit
 
 class AddCardViewModel {
+    
+    enum ViewState {
+        case error(String)
+        case success(String)
+    }
     
     private let realm = try? Realm()
     
@@ -17,6 +21,8 @@ class AddCardViewModel {
     var cardExpiry: String?
     var cardCVV: String?
     var balance: String?
+        
+    var addCardListener: ((ViewState)->Void)?
     
     var isCardNameValid: Bool {
         return cardName?.isValidName() ?? false
@@ -53,9 +59,10 @@ class AddCardViewModel {
         do {
             try realm?.write {
                 realm?.add(card)
-            }
+            }  
+            addCardListener?(.success("Card info is valid"))
         } catch {
-            print("Error saving card: \(error.localizedDescription)")
+            addCardListener?(.error("ERror localized ......"))
         }
     }
     

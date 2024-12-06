@@ -10,7 +10,7 @@ import RealmSwift
 class CardViewModel {
     
     enum ViewState {
-        case success
+        case success(String)
         case error(String)
     }
     
@@ -23,6 +23,7 @@ class CardViewModel {
     
     func fetchCardList() {
             self.cardList = realm?.objects(CardModel.self)
+        cardList?.count ?? 0 > 0 ? cardVMlistener?(.success("Fetch card success")) : cardVMlistener?(.error("Please add at least one card"))
         }
     
     
@@ -32,6 +33,8 @@ class CardViewModel {
                 try realm?.write {
                     realm?.delete(card)
                 }
+                cardVMlistener?(.success("Card deleted successfully"))
+
             } catch {
                 cardVMlistener?(.error("Error deleting card: \(error)"))
             }
