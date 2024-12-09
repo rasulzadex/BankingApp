@@ -66,7 +66,7 @@ class ProfileController: BaseViewController {
                 
     }
     
-    @objc func logOutAction() {
+    @objc private func logOutAction() {
         logoutAlert(message: "Hope to see you soon")
     }
     
